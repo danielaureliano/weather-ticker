@@ -3,6 +3,12 @@
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0c97f2">
+  <meta name="description" content="Ticker de dados meteorológicos do INMET para Brasília.">
+  <meta name="author" content="INMET - Instituto Nacional de Meteorologia">
   <title>Ticker Meteorologia INMET Brasília</title>
   <style>
     body {
@@ -203,7 +209,12 @@
         height: 42px;
       }
     }
-  </style>
+    
+    /* Adicionado para pausar a animação ao passar o mouse */
+    #weather-ticker-bar:hover #weather-ticker-content {
+        animation-play-state: paused;
+    }
+</style>  
 </head>
 
 <body>
@@ -317,210 +328,191 @@
       );
     }
 
-    async function loadWeatherData() {
-      const urlPrev = `https://apiprevmet3.inmet.gov.br/previsao/${codigoIBGE}`;
-      const urlAvisos = `https://apiprevmet3.inmet.gov.br/avisos/${codigoIBGE}`;
-      const urlAgora = `https://apiprevmet3.inmet.gov.br/estacao/proxima/${codigoIBGE}`;
-      let tickerHtml = "";
+async function loadWeatherData() {
+  const urlPrev = `https://apiprevmet3.inmet.gov.br/previsao/${codigoIBGE}`;
+  const urlAvisos = `https://apiprevmet3.inmet.gov.br/avisos/${codigoIBGE}`;
+  const urlAgora = `https://apiprevmet3.inmet.gov.br/estacao/proxima/${codigoIBGE}`;
+  let tickerHtml = "";
 
-      try {
-        // ALERTAS/AVISOS (cache 30min)
-        let alerts;
-        try {
-          alerts = getCachedData("inmet_alertas", 30);
-          if (!alerts) {
-            alerts = await fetchJsonOrText(urlAvisos);
-            setCachedData("inmet_alertas", alerts);
-          }
-          if (
-            alerts &&
-            alerts[codigoIBGE] &&
-            Array.isArray(alerts[codigoIBGE]) &&
-            alerts[codigoIBGE].length > 0
-          ) {
-            alerts[codigoIBGE].forEach((alerta) => {
-              tickerHtml += `<span class="weather-alert">
-        ⚠️ ${safe(alerta.tipo)} - ${safe(alerta.titulo)}: ${safe(alerta.texto)}
-        </span>`;
-            });
-          }
-        } catch (e) {
-          // Se não existe rota, ignora (só mostra no console, não quebra o ticker)
-          console.warn("Avisos não disponíveis:", e.message);
-        }
-
-
-        // TEMPO AGORA (cache 30min)
-        let dadosObj = getCachedData("inmet_agora", 30);
-        if (!dadosObj) {
-          dadosObj = await fetchJsonOrText(urlAgora);
-
-          setCachedData("inmet_agora", dadosObj);
-        }
-
-        let dado = dadosObj.dados || {};
-
-        tickerHtml += `<span class="weather-item">
-                    <img src="${ICON_TEMP}" class="weather-icon-tmax" alt="Temperatura atual">
-                    <span class="weather-label">Agora:</span>
-                    ${safe(dado.TEM_INS, "°C")}
-                    <img src="${ICON_SEN}" class="weather-icon-small" alt="Sensação térmica">
-                    Sensação: ${safe(dado.TEM_SEN, "°C")}
-                    <img src="${ICON_UMID}" class="weather-icon-umid" alt="Umidade">
-                    UMD: ${safe(dado.UMD_INS, "%")}
-                    <img src="${ICON_CHUVA}" class="weather-icon-small" alt="Chuva">
-                    Chuva: ${safe(dado.CHUVA, " mm")}
-                    <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">
-                    Vento: ${safe(dado.VEN_VEL, " m/s")} (${safe(
-          dado.VEN_RAJ,
-          " m/s"
-        )})
-                    </span>`;
-
-        // PREVISÃO DO TEMPO (hoje + próximos 3 dias) (cache 60min)
-        let data = getCachedData("inmet_previsao", 60);
-        if (!data) {
-          data = await fetchJsonOrText(urlPrev);
-
-          setCachedData("inmet_previsao", data);
-        }
-
-        const br = data && data[codigoIBGE] ? data[codigoIBGE] : {};
-        const diasKeys = Object.keys(br).sort((a, b) => {
-          const [da, ma, ya] = a.split('/').map(Number);
-          const [db, mb, yb] = b.split('/').map(Number);
-          return ya - yb || ma - mb || da - db;
-        });
-        if (!diasKeys.length)
-          throw new Error("Sem dados de previsão para Brasília");
-
-        // "Hoje" é a primeira data 
-        const hoje = br[diasKeys[0]];
-        console.log(hoje) //verificar o que está sendo entregue
-        // estação do ano
-        const iconEstacao = ICON_ESTACAO(hoje.estacao);
-        // Fase da lua
-        const iconLua = await getFaseLuaIcon();
-
-        // Previsão do dia 
-        tickerHtml += `<span class="weather-item">
-                    <span class="weather-label">Previsão do dia:</span>
-                    <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx.">Máxima: '<span class="weather-max">${safe(
-          hoje.temp_max,
-          "°C"
-        )}</span>
-                    <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín.">Mínima: <span class="weather-min">${safe(
-          hoje.temp_min,
-          "°C"
-        )}</span>
-                    <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Máx.">Umd. Máx.: <span>${safe(
-          hoje.umidade_max,
-          "%"
-        )}</span>
-                    <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Mín.">Umd. Mín.: <span>${safe(
-          hoje.umidade_min,
-          "%"
-        )}</span>
-                    <img src="${ICON_NASCER}" class="weather-icon-small" alt="Nascer do Sol">
-                    Nascer do Sol: ${utcToBrasilia(hoje.nascer)}
-                    <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
-                    Pôr do Sol: ${utcToBrasilia(hoje.ocaso)}
-                    <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(
-          hoje.estacao
-        )}" alt="Estação">
-                    <img src="${iconLua}" class="weather-icon-lua" alt="Lua" title="Fase da Lua">
-                    </span>`;
-
-        // Previsão manhã, tarde, noite de hoje
-        ["manha", "tarde", "noite"].forEach((periodo) => {
-          if (hoje[periodo]) {
-            tickerHtml += `<span class="weather-item">
-                            <img src="${hoje[periodo].icone
-              }" class="weather-icon" alt="${periodo}">
-                            <span class="weather-label">${periodo.charAt(0).toUpperCase() + periodo.slice(1)
-              }:</span>
-                            ${safe(hoje[periodo].resumo)},
-                            Vento: ${safe(hoje[periodo].int_vento)} (${safe(
-                hoje[periodo].dir_vento
-              )})
-                            </span>`;
-          }
-        });
-
-        // Próximos 3 dias: diasKeys[1], [2], [3]
-        for (let i = 1; i < 4 && i < diasKeys.length; i++) {
-          const dia = br[diasKeys[i]];
-
-          tickerHtml += `<span class="weather-item">
-                        <span class="weather-day">${safe(
-            dia.dia_semana
-          )}:</span>
-                        <img src="${dia.icone
-            }" class="weather-icon" alt="${safe(dia.dia_semana)}">
-                        <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx">Máxima: <span class="weather-max">${safe(
-              dia.temp_max,
-              "°C"
-            )}</span>
-                        <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín">Mínima: <span class="weather-min">${safe(
-              dia.temp_min,
-              "°C"
-            )}</span>
-                        <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Max">Umd. Máx.: <span>${safe(
-              dia.umidade_max,
-              "%"
-            )}</span>
-                        <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Min">Umd. Mín.: <span>${safe(
-              dia.umidade_min,
-              "%"
-            )}</span>
-                        <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(dia.int_vento)} (${safe(dia.dir_vento)}) 
-                      </span>`;
-
-        }
-      } catch (e) {
-        tickerHtml =
-          "Erro ao carregar informações meteorológicas. " + (e.message || e);
-        console.error(e);
+  try {
+    // ALERTAS/AVISOS (cache 30min)
+    let alerts;
+    try {
+      alerts = getCachedData("inmet_alertas", 30);
+      if (!alerts) {
+        alerts = await fetchJsonOrText(urlAvisos);
+        setCachedData("inmet_alertas", alerts);
       }
-
-      document.getElementById("weather-ticker-content").innerHTML =
-        tickerHtml;
-
-      const ticker = document.getElementById("weather-ticker-content");
-      ticker.style.animation = "none";
-      ticker.style.minWidth = "unset";
-      setTimeout(() => {
-        // Calcula a largura real do conteúdo
-        const tickerWidth = ticker.scrollWidth;
-        const parentWidth = ticker.parentElement.offsetWidth;
-
-        // Define a animação para percorrer 100% da largura do parent até o -tickerWidth
-        // Define a duração para que a velocidade seja constante (exemplo: 120 pixels por segundo)
-        // Se quiser ajustar a velocidade do ticker, só mude o valor de speedPxPerSec.
-        const speedPxPerSec = 120;
-        const duration = (tickerWidth + parentWidth) / speedPxPerSec;
-
-        // 5. Crie animação dinamicamente
-        const keyframesName = "ticker-weather-dyn";
-        const styleElem = document.getElementById("ticker-style-dyn") || (() => {
-          const style = document.createElement("style");
-          style.id = "ticker-style-dyn";
-          document.head.appendChild(style);
-          return style;
-        })();
-        styleElem.innerHTML = `
-        @keyframes ${keyframesName} {
-          0% { transform: translateX(${parentWidth}px);}
-          100% { transform: translateX(-${tickerWidth}px);}
-        }
-      `;
-        ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
-
-      }, 30);
+      if (
+        alerts &&
+        alerts[codigoIBGE] &&
+        Array.isArray(alerts[codigoIBGE]) &&
+        alerts[codigoIBGE].length > 0
+      ) {
+        alerts[codigoIBGE].forEach((alerta) => {
+          tickerHtml += `<span class="weather-alert">
+    ⚠️ ${safe(alerta.tipo)} - ${safe(alerta.titulo)}: ${safe(alerta.texto)}
+    </span>`;
+        });
+      }
+    } catch (e) {
+      console.warn("Avisos não disponíveis:", e.message);
     }
 
-    loadWeatherData();
-    setInterval(loadWeatherData, 30 * 60 * 1000);
+    // TEMPO AGORA (cache 30min)
+    let dadosObj = getCachedData("inmet_agora", 30);
+    if (!dadosObj) {
+      dadosObj = await fetchJsonOrText(urlAgora);
+      setCachedData("inmet_agora", dadosObj);
+    }
+    let dado = dadosObj.dados || {};
+
+    tickerHtml += `<span class="weather-item">
+                <img src="${ICON_TEMP}" class="weather-icon-tmax" alt="Temperatura atual">
+                <span class="weather-label">Agora:</span>
+                ${safe(dado.TEM_INS, "°C")}
+                <img src="${ICON_SEN}" class="weather-icon-small" alt="Sensação térmica">
+                Sensação: ${safe(dado.TEM_SEN, "°C")}
+                <img src="${ICON_UMID}" class="weather-icon-umid" alt="Umidade">
+                UMD: ${safe(dado.UMD_INS, "%")}
+                <img src="${ICON_CHUVA}" class="weather-icon-small" alt="Chuva">
+                Chuva: ${safe(dado.CHUVA, " mm")}
+                <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">
+                Vento: ${safe(dado.VEN_VEL, " m/s")} (${safe(
+      dado.VEN_RAJ,
+      " m/s"
+    )})
+                </span>`;
+
+    // PREVISÃO DO TEMPO (hoje + próximos 3 dias) (cache 60min)
+    let data = getCachedData("inmet_previsao", 60);
+    if (!data) {
+      data = await fetchJsonOrText(urlPrev);
+      setCachedData("inmet_previsao", data);
+    }
+
+    const br = data && data[codigoIBGE] ? data[codigoIBGE] : {};
+    const diasKeys = Object.keys(br).sort((a, b) => {
+      const [da, ma, ya] = a.split('/').map(Number);
+      const [db, mb, yb] = b.split('/').map(Number);
+      return ya - yb || ma - mb || da - db;
+    });
+    if (!diasKeys.length)
+      throw new Error("Sem dados de previsão para Brasília");
+
+    const hoje = br[diasKeys[0]];
+    const iconEstacao = ICON_ESTACAO(hoje.estacao);
+    const iconLua = await getFaseLuaIcon();
+
+    // Previsão do dia
+    tickerHtml += `<span class="weather-item">
+                <span class="weather-label">Previsão do dia:</span>
+                <span>${safe(hoje.manha.resumo)}</span> <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx.">Máxima: <span class="weather-max">${safe(
+      hoje.manha.temp_max,
+      "°C"
+    )}</span>
+                <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín.">Mínima: <span class="weather-min">${safe(
+      hoje.manha.temp_min,
+      "°C"
+    )}</span>
+                <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Máx.">Umd. Máx.: <span>${safe(
+      hoje.umidade_max,
+      "%"
+    )}</span>
+                <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Mín.">Umd. Mín.: <span>${safe(
+      hoje.umidade_min,
+      "%"
+    )}</span>
+                <img src="${ICON_NASCER}" class="weather-icon-small" alt="Nascer do Sol">
+                Nascer do Sol: ${utcToBrasilia(hoje.nascer)}
+                <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
+                Pôr do Sol: ${utcToBrasilia(hoje.ocaso)}
+                <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(
+      hoje.estacao
+    )}" alt="Estação">
+                <img src="${iconLua}" class="weather-icon-lua" alt="Lua" title="Fase da Lua">
+                </span>`;
+
+    ["manha", "tarde", "noite"].forEach((periodo) => {
+      if (hoje[periodo]) {
+        tickerHtml += `<span class="weather-item">
+                        <img src="${hoje[periodo].icone
+          }" class="weather-icon" alt="${periodo}">
+                        <span class="weather-label">${periodo.charAt(0).toUpperCase() + periodo.slice(1)
+          }:</span>
+                        ${safe(hoje[periodo].resumo)},
+                        Vento: ${safe(hoje[periodo].int_vento)} (${safe(
+            hoje[periodo].dir_vento
+          )})
+                        </span>`;
+      }
+    });
+
+    // Próximos 3 dias
+    for (let i = 1; i < 4 && i < diasKeys.length; i++) {
+      const dia = br[diasKeys[i]];
+      const previsao = dia.manha || dia;
+
+      tickerHtml += `<span class="weather-item">
+                    <span class="weather-day">${safe(
+        previsao.dia_semana || dia.dia_semana
+      )}:</span>
+                    <img src="${previsao.icone}" class="weather-icon" alt="${safe(previsao.dia_semana || dia.dia_semana)}">
+                    <span>${safe(previsao.resumo)}</span> <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx">Máxima: <span class="weather-max">${safe(
+          previsao.temp_max,
+          "°C"
+        )}</span>
+                    <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín">Mínima: <span class="weather-min">${safe(
+          previsao.temp_min,
+          "°C"
+        )}</span>
+                    <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Max">Umd. Máx.: <span>${safe(
+          dia.umidade_max, // Corrigido: sempre buscar do objeto 'dia'
+          "%"
+        )}</span>
+                    <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Min">Umd. Mín.: <span>${safe(
+          dia.umidade_min, // Corrigido: sempre buscar do objeto 'dia'
+          "%"
+        )}</span>
+                    <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(previsao.int_vento)} (${safe(previsao.dir_vento)}) 
+                  </span>`;
+    }
+  } catch (e) {
+    tickerHtml =
+      "Erro ao carregar informações meteorológicas. " + (e.message || e);
+    console.error(e);
+  }
+
+  document.getElementById("weather-ticker-content").innerHTML =
+    tickerHtml;
+
+  const ticker = document.getElementById("weather-ticker-content");
+  ticker.style.animation = "none";
+  ticker.style.minWidth = "unset";
+  setTimeout(() => {
+    const tickerWidth = ticker.scrollWidth;
+    const parentWidth = ticker.parentElement.offsetWidth;
+    const speedPxPerSec = 120;
+    const duration = (tickerWidth + parentWidth) / speedPxPerSec;
+    const keyframesName = "ticker-weather-dyn";
+    const styleElem = document.getElementById("ticker-style-dyn") || (() => {
+      const style = document.createElement("style");
+      style.id = "ticker-style-dyn";
+      document.head.appendChild(style);
+      return style;
+    })();
+    styleElem.innerHTML = `
+    @keyframes ${keyframesName} {
+      0% { transform: translateX(${parentWidth}px);}
+      100% { transform: translateX(-${tickerWidth}px);}
+    }
+  `;
+    ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
+  }, 30);
+}
+
+    // Carrega os dados meteorológicos ao carregar a página
+    document.addEventListener("DOMContentLoaded", loadWeatherData);
   </script>
 </body>
 
