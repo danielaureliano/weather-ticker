@@ -416,19 +416,19 @@ async function loadWeatherData() {
       "°C"
     )}</span>
                 <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Máx.">Umd. Máx.: <span>${safe(
-      hoje.umidade_max,
+      hoje.manha.umidade_max,
       "%"
     )}</span>
                 <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Mín.">Umd. Mín.: <span>${safe(
-      hoje.umidade_min,
+      hoje.manha.umidade_min,
       "%"
     )}</span>
                 <img src="${ICON_NASCER}" class="weather-icon-small" alt="Nascer do Sol">
-                Nascer do Sol: ${utcToBrasilia(hoje.nascer)}
+                Nascer do Sol: ${safe(hoje.manha.nascer)}
                 <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
-                Pôr do Sol: ${utcToBrasilia(hoje.ocaso)}
+                Pôr do Sol: ${safe(hoje.manha.ocaso)}
                 <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(
-      hoje.estacao
+      hoje.manha.estacao
     )}" alt="Estação">
                 <img src="${iconLua}" class="weather-icon-lua" alt="Lua" title="Fase da Lua">
                 </span>`;
@@ -467,11 +467,11 @@ async function loadWeatherData() {
           "°C"
         )}</span>
                     <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Max">Umd. Máx.: <span>${safe(
-          dia.umidade_max, // Corrigido: sempre buscar do objeto 'dia'
+          previsao.umidade_max, // Corrigido: sempre buscar do objeto 'dia'
           "%"
         )}</span>
                     <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Min">Umd. Mín.: <span>${safe(
-          dia.umidade_min, // Corrigido: sempre buscar do objeto 'dia'
+          previsao.umidade_min, // Corrigido: sempre buscar do objeto 'dia'
           "%"
         )}</span>
                     <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(previsao.int_vento)} (${safe(previsao.dir_vento)}) 
