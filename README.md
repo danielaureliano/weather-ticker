@@ -8,9 +8,7 @@ Um ticker de rolagem horizontal que exibe em tempo real os dados meteorológicos
 
 O projeto é um único arquivo `weatherTicker.html`, ideal para ser incorporado em dashboards, portais de notícias ou qualquer página web que necessite de informações climáticas dinâmicas e visualmente integradas.
 
-*(Sugestão: Grave um GIF curto da tela mostrando o ticker em ação e insira aqui. Ferramentas como ScreenToGif ou LICEcap são ótimas para isso)*
-
-![Demo do Ticker](https://i.imgur.com/placeholder.gif)
+![Demo do Ticker](https://github.com/danielaureliano/weather-ticker/blob/3879c0bef1d2dd7c0d3d96206e46407f160c7c97/weather-ticker-example.gif)
 
 ---
 
