@@ -485,6 +485,11 @@ async function loadWeatherData() {
           const umidadeMax = dia.umidade_max || previsao.umidade_max;
           const umidadeMin = dia.umidade_min || previsao.umidade_min;
 
+          // Calcula a fase da lua para cada dia da previsão
+          const [d_loop, m_loop, y_loop] = diasKeys[i].split('/');
+          const forecastDateString_loop = `${y_loop}-${m_loop.padStart(2, '0')}-${d_loop.padStart(2, '0')}`;
+          const faseLuaDia = getFaseLua(forecastDateString_loop);
+
       tickerHtml += `<span class="weather-item">
                     <span class="weather-day">${safe(
         previsao.dia_semana || dia.dia_semana
@@ -507,6 +512,9 @@ async function loadWeatherData() {
           "%"
         )}</span>
                     <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(previsao.int_vento)} (${safe(previsao.dir_vento)}) 
+                        <span class="weather-label">Lua:</span>
+                        <img src="${faseLuaDia.iconUrl}" class="weather-icon-lua" alt="Lua" title="${safe(faseLuaDia.name)}">
+                        <span>${safe(faseLuaDia.name)}</span>
                   </span>`;
     }
   } catch (e) {
