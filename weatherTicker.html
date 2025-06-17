@@ -3,8 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
-  <link rel="shortcut icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="https://images.icon-icons.com/8/PNG/64/cloudyweather_cloud_inpart_day_wind_thunder_sunny_rain_darkness_nublad_1459.png" type="image/x-icon">
+  <link rel="shortcut icon" href="https://images.icon-icons.com/8/PNG/64/cloudyweather_cloud_inpart_day_wind_thunder_sunny_rain_darkness_nublad_1459.png" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c97f2">
   <meta name="description" content="Ticker de dados meteorológicos do INMET para Brasília.">
@@ -140,7 +140,7 @@
       height: 44px;
       width: 44px;
 
-      border-radius: 12px;      
+      border-radius: 18px;      
     }
 
     .weather-icon-small {
@@ -236,61 +236,89 @@
     const ICON_SEN = "https://portal.inmet.gov.br/uploads/icones/sensa%C3%A7%C3%A3o.png";
     const ICON_WIND = "https://portal.inmet.gov.br/uploads/icones/wind.png";
     const ICON_CHUVA = "https://portal.inmet.gov.br/uploads/icones/precipta%C3%A7%C3%A3o.png";
-    const ICON_ESTACAO = (estacao) => `https://portal.inmet.gov.br/uploads/seasons/${capitalize(estacao)}.png`;
+    const ICON_ESTACAO = (estacao) => estacao ? `https://portal.inmet.gov.br/uploads/seasons/${capitalize(estacao)}.png` : ''; // Ícone de estação vazio se não houver estação
     const ICON_LUA = (num) => `https://portal.inmet.gov.br/uploads/luas/${num}.png`;
     const ICON_UMID = ICON_UMAX;
     const ICON_TEMP = ICON_TMAX;
 
     const codigoIBGE = "5300108"; // Brasília
 
-    // Dados das fases da lua para 2025 (IAG/USP)
+    // Calendário da Lua 2025 (IAG/USP)
     const moonPhases2025 = [
-        { date: "2025-01-06", phase: "Minguante" }, { date: "2025-01-13", phase: "Nova" },
-        { date: "2025-01-21", phase: "Crescente" }, { date: "2025-01-28", phase: "Cheia" },
-        { date: "2025-02-05", phase: "Minguante" }, { date: "2025-02-12", phase: "Nova" },
-        { date: "2025-02-19", phase: "Crescente" }, { date: "2025-02-27", phase: "Cheia" },
-        { date: "2025-03-07", phase: "Minguante" }, { date: "2025-03-14", phase: "Nova" },
-        { date: "2025-03-21", phase: "Crescente" }, { date: "2025-03-28", phase: "Cheia" },
-        { date: "2025-04-05", phase: "Minguante" }, { date: "2025-04-12", phase: "Nova" },
-        { date: "2025-04-19", phase: "Crescente" }, { date: "2025-04-27", phase: "Cheia" },
-        { date: "2025-05-05", phase: "Minguante" }, { date: "2025-05-11", phase: "Nova" },
-        { date: "2025-05-19", phase: "Crescente" }, { date: "2025-05-27", phase: "Cheia" },
-        { date: "2025-06-03", phase: "Minguante" }, { date: "2025-06-10", phase: "Nova" },
-        { date: "2025-06-18", phase: "Crescente" }, { date: "2025-06-25", phase: "Cheia" },
-        { date: "2025-07-02", phase: "Minguante" }, { date: "2025-07-10", phase: "Nova" },
-        { date: "2025-07-17", phase: "Crescente" }, { date: "2025-07-25", phase: "Cheia" },
-        { date: "2025-08-01", phase: "Minguante" }, { date: "2025-08-08", phase: "Nova" },
-        { date: "2025-08-16", phase: "Crescente" }, { date: "2025-08-24", phase: "Cheia" },
-        { date: "2025-08-30", phase: "Minguante" }, { date: "2025-09-07", phase: "Nova" },
-        { date: "2025-09-15", phase: "Crescente" }, { date: "2025-09-22", phase: "Cheia" },
-        { date: "2025-09-29", phase: "Minguante" }, { date: "2025-10-07", phase: "Nova" },
-        { date: "2025-10-14", phase: "Crescente" }, { date: "2025-10-22", phase: "Cheia" },
-        { date: "2025-10-28", phase: "Minguante" }, { date: "2025-11-05", phase: "Nova" },
-        { date: "2025-11-13", phase: "Crescente" }, { date: "2025-11-20", phase: "Cheia" },
-        { date: "2025-11-27", phase: "Minguante" }, { date: "2025-12-05", phase: "Nova" },
-        { date: "2025-12-13", phase: "Crescente" }, { date: "2025-12-20", phase: "Cheia" },
-        { date: "2025-12-27", phase: "Minguante" }
-    ];
+        { date: "2025-01-29", phase: "Nova" }, { date: "2025-01-06", phase: "Crescente" }, { date: "2025-01-13", phase: "Cheia" }, { date: "2025-01-21", phase: "Minguante" },
+        { date: "2025-02-27", phase: "Nova" }, { date: "2025-02-05", phase: "Crescente" }, { date: "2025-02-12", phase: "Cheia" }, { date: "2025-02-20", phase: "Minguante" },
+        { date: "2025-03-29", phase: "Nova" }, { date: "2025-03-06", phase: "Crescente" }, { date: "2025-03-14", phase: "Cheia" }, { date: "2025-03-22", phase: "Minguante" },
+        { date: "2025-04-27", phase: "Nova" }, { date: "2025-04-04", phase: "Crescente" }, { date: "2025-04-12", phase: "Cheia" }, { date: "2025-04-20", phase: "Minguante" },
+        { date: "2025-05-27", phase: "Nova" }, { date: "2025-05-04", phase: "Crescente" }, { date: "2025-05-12", phase: "Cheia" }, { date: "2025-05-20", phase: "Minguante" },
+        { date: "2025-06-25", phase: "Nova" }, { date: "2025-06-03", phase: "Crescente" }, { date: "2025-06-11", phase: "Cheia" }, { date: "2025-06-18", phase: "Minguante" },
+        { date: "2025-07-24", phase: "Nova" }, { date: "2025-07-02", phase: "Crescente" }, { date: "2025-07-10", phase: "Cheia" }, { date: "2025-07-17", phase: "Minguante" },
+        { date: "2025-08-23", phase: "Nova" }, { date: "2025-08-01", phase: "Crescente" }, { date: "2025-08-09", phase: "Cheia" }, { date: "2025-08-16", phase: "Minguante" },
+        { date: "2025-09-21", phase: "Nova" }, { date: "2025-08-31", phase: "Crescente" }, { date: "2025-09-07", phase: "Cheia" }, { date: "2025-09-14", phase: "Minguante" },
+        { date: "2025-10-21", phase: "Nova" }, { date: "2025-09-29", phase: "Crescente" }, { date: "2025-10-07", phase: "Cheia" }, { date: "2025-10-13", phase: "Minguante" },
+        { date: "2025-11-20", phase: "Nova" }, { date: "2025-10-29", phase: "Crescente" }, { date: "2025-11-05", phase: "Cheia" }, { date: "2025-11-12", phase: "Minguante" },
+        { date: "2025-12-19", phase: "Nova" }, { date: "2025-11-28", phase: "Crescente" }, { date: "2025-12-04", phase: "Cheia" }, { date: "2025-12-11", phase: "Minguante" },
+        { date: "2025-12-27", phase: "Crescente" }
+    ].sort((a, b) => a.date.localeCompare(b.date));
 
-    const phaseToIconMap = { 'Nova': 0, 'Crescente': 2, 'Cheia': 4, 'Minguante': 6 };
+    // ATUALIZADO: Mapeamento para as 8 fases da lua
+    const phaseToIconMap = {
+        'Nova': 0, 'Crescente Côncava': 1, 'Quarto Crescente': 2, 'Crescente Gibosa': 3,
+        'Cheia': 4, 'Minguante Gibosa': 5, 'Quarto Minguante': 6, 'Minguante Côncava': 7
+    };
+    
+    // Função para calcular a diferença em dias entre duas datas YYYY-MM-DD
+    const dayDiff = (dateStr1, dateStr2) => {
+        const d1 = new Date(dateStr1 + "T12:00:00Z"); // Usar UTC para evitar problemas de fuso
+        const d2 = new Date(dateStr2 + "T12:00:00Z");
+        return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+    };
 
-    function getFaseLua(forecastDate) {
-        let lastPhase = moonPhases2025[0];
-        for (const phase of moonPhases2025) {
-            const [y, m, d] = phase.date.split('-').map(Number);
-            const phaseDate = new Date(y, m - 1, d);
-            if (phaseDate <= forecastDate) {
-                lastPhase = phase;
+    // Função da Lua com a nova lógica de negócio
+    function getFaseLua(forecastDateString) {
+        const currentYear = forecastDateString.substring(0, 4);
+        if (currentYear !== '2025') {
+            return { name: "Ano não suportado", iconUrl: ICON_LUA(4) };
+        }
+        
+        let lastPhase = null, nextPhase = null;
+        for (let i = 0; i < moonPhases2025.length; i++) {
+            if (moonPhases2025[i].date <= forecastDateString) {
+                lastPhase = moonPhases2025[i];
             } else {
+                nextPhase = moonPhases2025[i];
                 break;
             }
         }
         
-        const iconNumber = phaseToIconMap[lastPhase.phase] ?? 4; 
+        if (!lastPhase) lastPhase = moonPhases2025[0];
+
+        let currentPhaseName = lastPhase.phase;
+
+        // REGRA 1: Se a próxima fase for "amanhã", antecipa o nome.
+        if (nextPhase && dayDiff(forecastDateString, nextPhase.date) === 1) {
+            currentPhaseName = nextPhase.phase === 'Crescente' ? 'Quarto Crescente' : 
+                               nextPhase.phase === 'Minguante' ? 'Quarto Minguante' : nextPhase.phase;
+        } 
+        // REGRA 2: Se hoje é o dia exato de uma fase principal.
+        else if (lastPhase.date === forecastDateString) {
+            currentPhaseName = lastPhase.phase === 'Crescente' ? 'Quarto Crescente' : 
+                               lastPhase.phase === 'Minguante' ? 'Quarto Minguante' : lastPhase.phase;
+        }
+        // REGRA 3: Se for um dia intermediário (não é véspera nem dia exato).
+        else {
+            switch (lastPhase.phase) {
+                case 'Nova': currentPhaseName = 'Crescente Côncava'; break;
+                case 'Crescente': currentPhaseName = 'Crescente Gibosa'; break;
+                case 'Cheia': currentPhaseName = 'Minguante Gibosa'; break;
+                case 'Minguante': currentPhaseName = 'Minguante Côncava'; break;
+            }
+        }
+        
+        const iconNumber = phaseToIconMap[currentPhaseName] ?? 4; 
         
         return {
             iconUrl: ICON_LUA(iconNumber),
-            name: lastPhase.phase
+            name: currentPhaseName
         };
     }
 
@@ -397,13 +425,15 @@ async function loadWeatherData() {
 
     const hoje = br[diasKeys[0]];
         
-        // Ícone da estação do ano
-        const iconEstacao = ICON_ESTACAO(hoje.manha.estacao);
+        // --- CORREÇÃO APLICADA AQUI ---
+        // 1. Criar a string da data da previsão no formato YYYY-MM-DD
+        const [d, m, y] = diasKeys[0].split('/');
+        const forecastDateString = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         
-        // Determina a fase da lua para o dia atual
-        const [d, m, y] = diasKeys[0].split('/').map(Number);
-        const forecastDate = new Date(y, m - 1, d);
-        const faseLua = getFaseLua(forecastDate);
+        // 2. Calcular a fase da lua e obter o ícone da estação
+        const faseLua = getFaseLua(forecastDateString);
+        const iconEstacao = ICON_ESTACAO(hoje.manha.estacao);
+        // Não há mais declarações duplicadas aqui.
 
     // Previsão do dia
     tickerHtml += `<span class="weather-item">
@@ -452,6 +482,8 @@ async function loadWeatherData() {
     for (let i = 1; i < 4 && i < diasKeys.length; i++) {
       const dia = br[diasKeys[i]];
       const previsao = dia.manha || dia;
+          const umidadeMax = dia.umidade_max || previsao.umidade_max;
+          const umidadeMin = dia.umidade_min || previsao.umidade_min;
 
       tickerHtml += `<span class="weather-item">
                     <span class="weather-day">${safe(
