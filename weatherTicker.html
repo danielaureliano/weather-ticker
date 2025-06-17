@@ -72,7 +72,7 @@
       display: flex;
       align-items: stretch;
       overflow: hidden;
-      border-radius: 6px 6px 0 0;
+      border-radius: 0 0 6px 6px;
       box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.09);
     }
 
@@ -184,8 +184,7 @@
       height: 44px;
       width: 44px;
 
-      border-radius: 6px;
-      background: #fff3;
+      border-radius: 12px;      
     }
 
     .weather-icon-small {
@@ -211,8 +210,8 @@
     }
 
     .weather-label {
-      font-weight: bold;
-      margin-right: 3px;
+      font-weight: bold;      
+      margin-left: 8px;
     }
 
     .weather-day {
@@ -446,17 +445,17 @@ async function loadWeatherData() {
 
     const hoje = br[diasKeys[0]];
         
-        // CORRIGIDO: Usa 'hoje.manha.estacao' para o ícone.
+        // Ícone da estação do ano
         const iconEstacao = ICON_ESTACAO(hoje.manha.estacao);
         
-        // CORRIGIDO: Cria a data da previsão para passar para a função da lua
+        // Determina a fase da lua para o dia atual
         const [d, m, y] = diasKeys[0].split('/').map(Number);
         const forecastDate = new Date(y, m - 1, d);
         const faseLua = getFaseLua(forecastDate);
 
     // Previsão do dia
     tickerHtml += `<span class="weather-item">
-                <span class="weather-label">Previsão do dia:</span>
+                <span class="weather-day">Previsão do dia:</span>
                 <span>${safe(hoje.manha.resumo)}</span> <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx.">Máxima: <span class="weather-max">${safe(
       hoje.manha.temp_max,
       "°C"
@@ -477,9 +476,11 @@ async function loadWeatherData() {
                     Nascer do Sol: ${safe(hoje.manha.nascer)}
                 <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
                     Pôr do Sol: ${safe(hoje.manha.ocaso)}
-                    <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(hoje.manha.estacao)}" alt="Estação">Estação: ${safe(
-      hoje.manha.estacao)}                
-                     <span class="weather-label">Lua:</span><img src="${faseLua.iconUrl}" class="weather-icon-lua" alt="Lua" title="${safe(faseLua.name)}">
+                <span class="weather-label">Estação:</span>
+                    <img src="${iconEstacao}" class="weather-icon-estacao" alt="Estação" title="${safe(hoje.manha.estacao)}">
+                    <span>${safe(hoje.manha.estacao)}</span>
+                <span class="weather-label">Lua:</span>
+                    <img src="${faseLua.iconUrl}" class="weather-icon-lua" alt="Lua" title="${safe(faseLua.name)}">
                     <span>${safe(faseLua.name)}</span>
                 </span>`;
 
@@ -488,7 +489,7 @@ async function loadWeatherData() {
       if (hoje[periodo]) {
         tickerHtml += `<span class="weather-item">
                             <img src="${hoje[periodo].icone}" class="weather-icon" alt="${periodo}">
-                            <span class="weather-label">${capitalize(periodo)}:</span>
+                            <span class="weather-day">${capitalize(periodo)}:</span>
                         ${safe(hoje[periodo].resumo)},
                             Vento: ${safe(hoje[periodo].int_vento)} (${safe(hoje[periodo].dir_vento)})
                         </span>`;
