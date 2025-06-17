@@ -1,3 +1,47 @@
+<!--
+  weatherTicker.html
+
+  Ticker Meteorologia INMET Brasília
+
+  Descrição:
+  -----------
+  Este arquivo HTML implementa um ticker fixo na parte inferior da página que exibe informações meteorológicas em tempo real para Brasília, utilizando dados oficiais do INMET (Instituto Nacional de Meteorologia). O ticker mostra alertas meteorológicos, condições atuais, previsão do dia e dos próximos três dias, além de ícones representativos para temperatura, umidade, vento, chuva, estação do ano e fase da lua.
+
+  Principais Funcionalidades:
+  ---------------------------
+  - Exibe alertas meteorológicos ativos para Brasília.
+  - Mostra dados atuais da estação meteorológica mais próxima (temperatura, sensação térmica, umidade, chuva, vento).
+  - Apresenta previsão detalhada para o dia (máxima, mínima, umidade, nascer/pôr do sol, estação, lua).
+  - Lista previsões resumidas para os próximos três dias.
+  - Utiliza ícones oficiais do INMET para melhor visualização dos dados.
+  - Animação de ticker horizontal com pausa ao passar o mouse.
+  - Responsivo para diferentes tamanhos de tela e orientação (paisagem/retrato).
+  - Cache local dos dados para reduzir requisições e acelerar carregamento.
+
+  Estrutura do Código:
+  --------------------
+  - <style>: Define o layout, cores, animações e responsividade do ticker.
+  - <body>: Contém a barra do ticker com título e área de exibição dos dados.
+  - <script>:
+      - Define URLs e funções utilitárias para manipulação de dados e ícones.
+      - Funções para buscar e cachear dados meteorológicos e alertas via API do INMET.
+      - Função principal `loadWeatherData` que monta o HTML do ticker dinamicamente.
+      - Ajuste dinâmico da velocidade da animação conforme o tamanho do conteúdo.
+      - Evento DOMContentLoaded para iniciar o carregamento dos dados ao abrir a página.
+
+  Observações:
+  ------------
+  - O ticker é otimizado para uso em sites públicos, painéis e dashboards.
+  - O código utiliza apenas JavaScript puro (sem dependências externas).
+  - Os dados são atualizados automaticamente ao recarregar a página, respeitando o cache local.
+  - Para alterar a cidade, basta modificar o valor da variável `codigoIBGE`.
+
+  Autor:
+  ------
+  Daniel Aureliano
+
+  Última atualização: 16/06/2025
+-->
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -60,13 +104,15 @@
       position: relative;
     }
 
-    #weather-ticker-content {
-      white-space: nowrap;
-      display: inline-block;
-      font-size: 2rem;
-      min-width: 100vw;
-      animation: ticker-weather 40s linear infinite;
-    }
+#weather-ticker-content {
+  /* display: inline-block; */ /* Linha antiga removida */
+  display: flex; /* Adicionado */
+  align-items: center; /* Adicionado */
+  white-space: nowrap;
+  font-size: 2rem;
+  min-width: 100vw;
+  animation: ticker-weather 40s linear infinite;
+}
 
     @media (max-width: 800px) {
       #weather-title {
@@ -230,85 +276,88 @@
 
   <script>
     // Ícones oficiais
-    const ICON_TMIN =
-      "https://portal.inmet.gov.br/uploads/icones/temperatura_minima.jpg";
-    const ICON_TMAX =
-      "https://portal.inmet.gov.br/uploads/icones/temperatura_maxima.png";
-    const ICON_UMAX =
-      "https://portal.inmet.gov.br/uploads/icones/umidade_max.png";
-    const ICON_UMIN =
-      "https://portal.inmet.gov.br/uploads/icones/umidade_min.png";
-    const ICON_OCASO =
-      "https://portal.inmet.gov.br/uploads/icones/ocaso_sol.png";
-    const ICON_NASCER =
-      "https://portal.inmet.gov.br/uploads/icones/nascer_sol.png";
-    const ICON_SEN =
-      "https://portal.inmet.gov.br/uploads/icones/sensa%C3%A7%C3%A3o.png";
+    const ICON_TMIN = "https://portal.inmet.gov.br/uploads/icones/temperatura_minima.jpg";
+    const ICON_TMAX = "https://portal.inmet.gov.br/uploads/icones/temperatura_maxima.png";
+    const ICON_UMAX = "https://portal.inmet.gov.br/uploads/icones/umidade_max.png";
+    const ICON_UMIN = "https://portal.inmet.gov.br/uploads/icones/umidade_min.png";
+    const ICON_OCASO = "https://portal.inmet.gov.br/uploads/icones/ocaso_sol.png";
+    const ICON_NASCER = "https://portal.inmet.gov.br/uploads/icones/nascer_sol.png";
+    const ICON_SEN = "https://portal.inmet.gov.br/uploads/icones/sensa%C3%A7%C3%A3o.png";
     const ICON_WIND = "https://portal.inmet.gov.br/uploads/icones/wind.png";
-    const ICON_CHUVA =
-      "https://portal.inmet.gov.br/uploads/icones/precipta%C3%A7%C3%A3o.png";
-    const ICON_ESTACAO = (estacao) =>
-      `https://portal.inmet.gov.br/uploads/seasons/${capitalize(
-        estacao
-      )}.png`;
-    const ICON_LUA = (num) =>
-      `https://portal.inmet.gov.br/uploads/luas/${num}.png`;
+    const ICON_CHUVA = "https://portal.inmet.gov.br/uploads/icones/precipta%C3%A7%C3%A3o.png";
+    const ICON_ESTACAO = (estacao) => `https://portal.inmet.gov.br/uploads/seasons/${capitalize(estacao)}.png`;
+    const ICON_LUA = (num) => `https://portal.inmet.gov.br/uploads/luas/${num}.png`;
     const ICON_UMID = ICON_UMAX;
     const ICON_TEMP = ICON_TMAX;
 
     const codigoIBGE = "5300108"; // Brasília
 
+    // Dados das fases da lua para 2025 (IAG/USP)
+    const moonPhases2025 = [
+        { date: "2025-01-06", phase: "Minguante" }, { date: "2025-01-13", phase: "Nova" },
+        { date: "2025-01-21", phase: "Crescente" }, { date: "2025-01-28", phase: "Cheia" },
+        { date: "2025-02-05", phase: "Minguante" }, { date: "2025-02-12", phase: "Nova" },
+        { date: "2025-02-19", phase: "Crescente" }, { date: "2025-02-27", phase: "Cheia" },
+        { date: "2025-03-07", phase: "Minguante" }, { date: "2025-03-14", phase: "Nova" },
+        { date: "2025-03-21", phase: "Crescente" }, { date: "2025-03-28", phase: "Cheia" },
+        { date: "2025-04-05", phase: "Minguante" }, { date: "2025-04-12", phase: "Nova" },
+        { date: "2025-04-19", phase: "Crescente" }, { date: "2025-04-27", phase: "Cheia" },
+        { date: "2025-05-05", phase: "Minguante" }, { date: "2025-05-11", phase: "Nova" },
+        { date: "2025-05-19", phase: "Crescente" }, { date: "2025-05-27", phase: "Cheia" },
+        { date: "2025-06-03", phase: "Minguante" }, { date: "2025-06-10", phase: "Nova" },
+        { date: "2025-06-18", phase: "Crescente" }, { date: "2025-06-25", phase: "Cheia" },
+        { date: "2025-07-02", phase: "Minguante" }, { date: "2025-07-10", phase: "Nova" },
+        { date: "2025-07-17", phase: "Crescente" }, { date: "2025-07-25", phase: "Cheia" },
+        { date: "2025-08-01", phase: "Minguante" }, { date: "2025-08-08", phase: "Nova" },
+        { date: "2025-08-16", phase: "Crescente" }, { date: "2025-08-24", phase: "Cheia" },
+        { date: "2025-08-30", phase: "Minguante" }, { date: "2025-09-07", phase: "Nova" },
+        { date: "2025-09-15", phase: "Crescente" }, { date: "2025-09-22", phase: "Cheia" },
+        { date: "2025-09-29", phase: "Minguante" }, { date: "2025-10-07", phase: "Nova" },
+        { date: "2025-10-14", phase: "Crescente" }, { date: "2025-10-22", phase: "Cheia" },
+        { date: "2025-10-28", phase: "Minguante" }, { date: "2025-11-05", phase: "Nova" },
+        { date: "2025-11-13", phase: "Crescente" }, { date: "2025-11-20", phase: "Cheia" },
+        { date: "2025-11-27", phase: "Minguante" }, { date: "2025-12-05", phase: "Nova" },
+        { date: "2025-12-13", phase: "Crescente" }, { date: "2025-12-20", phase: "Cheia" },
+        { date: "2025-12-27", phase: "Minguante" }
+    ];
+
+    const phaseToIconMap = { 'Nova': 0, 'Crescente': 2, 'Cheia': 4, 'Minguante': 6 };
+
+    function getFaseLua(forecastDate) {
+        let lastPhase = moonPhases2025[0];
+        for (const phase of moonPhases2025) {
+            const [y, m, d] = phase.date.split('-').map(Number);
+            const phaseDate = new Date(y, m - 1, d);
+            if (phaseDate <= forecastDate) {
+                lastPhase = phase;
+            } else {
+                break;
+            }
+        }
+        
+        const iconNumber = phaseToIconMap[lastPhase.phase] ?? 4; 
+        
+        return {
+            iconUrl: ICON_LUA(iconNumber),
+            name: lastPhase.phase
+        };
+    }
+
     function capitalize(str) {
-      return str && typeof str === "string"
-        ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-        : "";
+      return str && typeof str === "string" ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
     }
 
     function safe(val, unit = "") {
-      return val !== undefined && val !== null && val !== ""
-        ? val + unit
-        : "--";
+      return val !== undefined && val !== null && val !== "" ? val + unit : "--";
     }
 
-    function utcToBrasilia(horaUtc) {
-      if (!horaUtc || typeof horaUtc !== "string") return "--";
-
-      let h = 0,
-        m = 0;
-      if (horaUtc.includes(":")) {
-        [h, m] = horaUtc.split(":").map(Number);
-      } else if (horaUtc.length === 4) {
-        h = Number(horaUtc.substr(0, 2));
-        m = Number(horaUtc.substr(2, 2));
-      } else if (horaUtc.length === 2) {
-        h = Number(horaUtc);
-        m = 0;
-      }
-      h = (h - 3 + 24) % 24;
-      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    }
-
-    async function getFaseLuaIcon() {
-      try {
-        const resp = await fetch("https://portal.inmet.gov.br/paginas/luas");
-        const text = await resp.text();
-        const match = text.match(/\/uploads\/luas\/(\d+).png/);
-        if (match && match[1]) {
-          return ICON_LUA(match[1]);
-        }
-      } catch (e) { }
-
-      return ICON_LUA(4);
-    }
     async function fetchJsonOrText(url) {
       const resp = await fetch(url);
       const text = await resp.text();
-      try {
-        return JSON.parse(text);
-      } catch {
-        throw new Error(text); // Erro textual (mensagem do INMET)
-      }
+      try { return JSON.parse(text); }
+      catch { throw new Error(text); }
     }
+
     function getCachedData(key, maxMinutes) {
       const item = localStorage.getItem(key);
       if (!item) return null;
@@ -317,15 +366,11 @@
         const ageMinutes = (Date.now() - timestamp) / 1000 / 60;
         if (ageMinutes > maxMinutes) return null;
         return data;
-      } catch {
-        return null;
-      }
+      } catch { return null; }
     }
+
     function setCachedData(key, data) {
-      localStorage.setItem(
-        key,
-        JSON.stringify({ data, timestamp: Date.now() })
-      );
+      localStorage.setItem( key, JSON.stringify({ data, timestamp: Date.now() }) );
     }
 
 async function loadWeatherData() {
@@ -335,7 +380,7 @@ async function loadWeatherData() {
   let tickerHtml = "";
 
   try {
-    // ALERTAS/AVISOS (cache 30min)
+        // ... (Bloco de Alertas e Tempo Agora permanece o mesmo) ...
     let alerts;
     try {
       alerts = getCachedData("inmet_alertas", 30);
@@ -397,12 +442,17 @@ async function loadWeatherData() {
       const [db, mb, yb] = b.split('/').map(Number);
       return ya - yb || ma - mb || da - db;
     });
-    if (!diasKeys.length)
-      throw new Error("Sem dados de previsão para Brasília");
+        if (!diasKeys.length) throw new Error("Sem dados de previsão para Brasília");
 
     const hoje = br[diasKeys[0]];
-    const iconEstacao = ICON_ESTACAO(hoje.estacao);
-    const iconLua = await getFaseLuaIcon();
+        
+        // CORRIGIDO: Usa 'hoje.manha.estacao' para o ícone.
+        const iconEstacao = ICON_ESTACAO(hoje.manha.estacao);
+        
+        // CORRIGIDO: Cria a data da previsão para passar para a função da lua
+        const [d, m, y] = diasKeys[0].split('/').map(Number);
+        const forecastDate = new Date(y, m - 1, d);
+        const faseLua = getFaseLua(forecastDate);
 
     // Previsão do dia
     tickerHtml += `<span class="weather-item">
@@ -424,26 +474,23 @@ async function loadWeatherData() {
       "%"
     )}</span>
                 <img src="${ICON_NASCER}" class="weather-icon-small" alt="Nascer do Sol">
-                Nascer do Sol: ${safe(hoje.manha.nascer)}
+                    Nascer do Sol: ${safe(hoje.manha.nascer)}
                 <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
-                Pôr do Sol: ${safe(hoje.manha.ocaso)}
-                <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(
-      hoje.manha.estacao
-    )}" alt="Estação">
-                <img src="${iconLua}" class="weather-icon-lua" alt="Lua" title="Fase da Lua">
+                    Pôr do Sol: ${safe(hoje.manha.ocaso)}
+                    <img src="${iconEstacao}" class="weather-icon-estacao" title="${safe(hoje.manha.estacao)}" alt="Estação">Estação: ${safe(
+      hoje.manha.estacao)}                
+                     <span class="weather-label">Lua:</span><img src="${faseLua.iconUrl}" class="weather-icon-lua" alt="Lua" title="${safe(faseLua.name)}">
+                    <span>${safe(faseLua.name)}</span>
                 </span>`;
 
+        // Previsão períodos de hoje
     ["manha", "tarde", "noite"].forEach((periodo) => {
       if (hoje[periodo]) {
         tickerHtml += `<span class="weather-item">
-                        <img src="${hoje[periodo].icone
-          }" class="weather-icon" alt="${periodo}">
-                        <span class="weather-label">${periodo.charAt(0).toUpperCase() + periodo.slice(1)
-          }:</span>
+                            <img src="${hoje[periodo].icone}" class="weather-icon" alt="${periodo}">
+                            <span class="weather-label">${capitalize(periodo)}:</span>
                         ${safe(hoje[periodo].resumo)},
-                        Vento: ${safe(hoje[periodo].int_vento)} (${safe(
-            hoje[periodo].dir_vento
-          )})
+                            Vento: ${safe(hoje[periodo].int_vento)} (${safe(hoje[periodo].dir_vento)})
                         </span>`;
       }
     });
@@ -492,7 +539,7 @@ async function loadWeatherData() {
   setTimeout(() => {
     const tickerWidth = ticker.scrollWidth;
     const parentWidth = ticker.parentElement.offsetWidth;
-    const speedPxPerSec = 120;
+    const speedPxPerSec = 140; // Velocidade fixa de 140px/s
     const duration = (tickerWidth + parentWidth) / speedPxPerSec;
     const keyframesName = "ticker-weather-dyn";
     const styleElem = document.getElementById("ticker-style-dyn") || (() => {
@@ -501,18 +548,16 @@ async function loadWeatherData() {
       document.head.appendChild(style);
       return style;
     })();
-    styleElem.innerHTML = `
-    @keyframes ${keyframesName} {
-      0% { transform: translateX(${parentWidth}px);}
-      100% { transform: translateX(-${tickerWidth}px);}
-    }
-  `;
+        styleElem.innerHTML = `@keyframes ${keyframesName} { 0% { transform: translateX(${parentWidth}px); } 100% { transform: translateX(-${tickerWidth}px); } }`;
     ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
   }, 30);
 }
 
     // Carrega os dados meteorológicos ao carregar a página
     document.addEventListener("DOMContentLoaded", loadWeatherData);
+    // Adiciona um intervalo para recarregar os dados a cada 30 minutos
+    setInterval(loadWeatherData, 30 * 60 * 1000);
+
   </script>
 </body>
 
