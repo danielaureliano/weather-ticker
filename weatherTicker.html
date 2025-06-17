@@ -1,47 +1,3 @@
-<!--
-  weatherTicker.html
-
-  Ticker Meteorologia INMET Brasília
-
-  Descrição:
-  -----------
-  Este arquivo HTML implementa um ticker fixo na parte inferior da página que exibe informações meteorológicas em tempo real para Brasília, utilizando dados oficiais do INMET (Instituto Nacional de Meteorologia). O ticker mostra alertas meteorológicos, condições atuais, previsão do dia e dos próximos três dias, além de ícones representativos para temperatura, umidade, vento, chuva, estação do ano e fase da lua.
-
-  Principais Funcionalidades:
-  ---------------------------
-  - Exibe alertas meteorológicos ativos para Brasília.
-  - Mostra dados atuais da estação meteorológica mais próxima (temperatura, sensação térmica, umidade, chuva, vento).
-  - Apresenta previsão detalhada para o dia (máxima, mínima, umidade, nascer/pôr do sol, estação, lua).
-  - Lista previsões resumidas para os próximos três dias.
-  - Utiliza ícones oficiais do INMET para melhor visualização dos dados.
-  - Animação de ticker horizontal com pausa ao passar o mouse.
-  - Responsivo para diferentes tamanhos de tela e orientação (paisagem/retrato).
-  - Cache local dos dados para reduzir requisições e acelerar carregamento.
-
-  Estrutura do Código:
-  --------------------
-  - <style>: Define o layout, cores, animações e responsividade do ticker.
-  - <body>: Contém a barra do ticker com título e área de exibição dos dados.
-  - <script>:
-      - Define URLs e funções utilitárias para manipulação de dados e ícones.
-      - Funções para buscar e cachear dados meteorológicos e alertas via API do INMET.
-      - Função principal `loadWeatherData` que monta o HTML do ticker dinamicamente.
-      - Ajuste dinâmico da velocidade da animação conforme o tamanho do conteúdo.
-      - Evento DOMContentLoaded para iniciar o carregamento dos dados ao abrir a página.
-
-  Observações:
-  ------------
-  - O ticker é otimizado para uso em sites públicos, painéis e dashboards.
-  - O código utiliza apenas JavaScript puro (sem dependências externas).
-  - Os dados são atualizados automaticamente ao recarregar a página, respeitando o cache local.
-  - Para alterar a cidade, basta modificar o valor da variável `codigoIBGE`.
-
-  Autor:
-  ------
-  Daniel Aureliano
-
-  Última atualização: 16/06/2025
--->
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -49,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="https://portal.inmet.gov.br/uploads/icones/favicon.ico" type="image/x-icon">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0c97f2">
   <meta name="description" content="Ticker de dados meteorológicos do INMET para Brasília.">
   <meta name="author" content="INMET - Instituto Nacional de Meteorologia">
@@ -253,12 +209,8 @@
         width: 42px;
         height: 42px;
       }
-    }
+    }   
     
-    /* Adicionado para pausar a animação ao passar o mouse */
-    #weather-ticker-bar:hover #weather-ticker-content {
-        animation-play-state: paused;
-    }
 </style>  
 </head>
 
@@ -554,10 +506,26 @@ async function loadWeatherData() {
   }, 30);
 }
 
-    // Carrega os dados meteorológicos ao carregar a página
-    document.addEventListener("DOMContentLoaded", loadWeatherData);
-    // Adiciona um intervalo para recarregar os dados a cada 30 minutos
-    setInterval(loadWeatherData, 30 * 60 * 1000);
+document.addEventListener("DOMContentLoaded", () => {
+  loadWeatherData(); // Carrega os dados na primeira vez
+
+  // Lógica para pausar a animação com o mouse
+  const tickerBar = document.getElementById("weather-ticker-bar");
+  const tickerContent = document.getElementById("weather-ticker-content");
+
+  if (tickerBar && tickerContent) {
+    tickerBar.addEventListener("mouseenter", () => {
+      tickerContent.style.animationPlayState = "paused";
+    });
+
+    tickerBar.addEventListener("mouseleave", () => {
+      tickerContent.style.animationPlayState = "running";
+    });
+  }
+});
+
+// Atualiza os dados a cada 30 minutos
+setInterval(loadWeatherData, 30 * 60 * 1000);
 
   </script>
 </body>
