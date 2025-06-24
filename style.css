@@ -159,18 +159,15 @@ body {
 }
 
 .weather-alert {
-  color: #ffd600;
   font-weight: bold;
-  margin-right: 50px;
-
-  padding: 8px 22px;
-  border-radius: 10px;
-  background: #c70000;
-  border: 2px solid #ffd600;
-  font-size: 1.4rem;
-  letter-spacing: 1px;
-  text-shadow: 1px 1px 3px #222a;
   display: inline-block;
+  margin-right: 1.5em;
+  border-radius: 4px;
+  padding: 0 0.5em;
+  color: #222;
+  background: #FFFE00;
+  font-size: 1em;
+  vertical-align: middle;
 }
 
 .weather-label {

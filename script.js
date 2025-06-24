@@ -67,7 +67,7 @@ function getLunarDay(targetDate) {
   );
 
   const diffMs = targetMs - KNOWN_NEW_MOON_MS;
-  // Pega o resto da divisão em milissegundos, como no código Java
+  // Pega o resto da divisão em milissegundos, como no código Jisoa
   const cycleRemainderMs = diffMs % LUNAR_CYCLE_MS;
 
   const lunarDay = cycleRemainderMs / MS_PER_DAY;
@@ -130,49 +130,103 @@ async function fetchJsonOrText(url) {
   }
 }
 
-function getCachedData(key, maxMinutes) {
-  const item = localStorage.getItem(key);
-  if (!item) return null;
+/**
+ * Recupera dados do cache localStorage, se não expirou.
+ * @param {string} key
+ * @param {number} minutos - tempo de expiração em minutos
+ */
+function getCachedData(key, minutos = 30) {
   try {
+    const item = localStorage.getItem(key);
+    if (!item) return null;
     const { data, timestamp } = JSON.parse(item);
-    const ageMinutes = (Date.now() - timestamp) / 1000 / 60;
-    if (ageMinutes > maxMinutes) return null;
+    if (Date.now() - timestamp > minutos * 60 * 1000) {
+      localStorage.removeItem(key);
+      return null;
+    }
     return data;
   } catch {
     return null;
   }
 }
 
+/**
+ * Salva dados no cache localStorage.
+ * @param {string} key
+ * @param {any} data
+ */
 function setCachedData(key, data) {
-  localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ data, timestamp: Date.now() })
+    );
+  } catch {}
+}
+
+// Função para buscar e montar os alertas detalhados
+async function getAlertasDetalhados() {
+  const urlAvisos = `https://apiprevmet3.inmet.gov.br/avisos/getByGeocode/${codigoIBGE}`;
+  let alertas = getCachedData("inmet_alertas", 30);
+  if (!alertas) {
+    alertas = await fetchJsonOrText(urlAvisos);
+    setCachedData("inmet_alertas", alertas);
+  }
+  // Se não houver alertas ativos, retorna array vazio
+  if (!Array.isArray(alertas) || alertas.length === 0) return [];
+
+  // Para cada alerta, busca detalhes pelo id
+  const detalhes = await Promise.all(
+    alertas.map(async (alerta) => {
+      const urlDetalhe = `https://apiprevmet3.inmet.gov.br/aviso/getByID/${alerta.id}`;
+      let detalhe = getCachedData(`inmet_alerta_${alerta.id}`, 30);
+      if (!detalhe) {
+        detalhe = await fetchJsonOrText(urlDetalhe);
+        setCachedData(`inmet_alerta_${alerta.id}`, detalhe);
+      }
+      return { ...alerta, ...detalhe };
+    })
+  );
+  return detalhes;
+}
+
+// Função para formatar datas do alerta
+function formatarDataAlerta(dataISO, hora) {
+  if (!dataISO) return "--";
+  const data = new Date(dataISO);
+  const dia = String(data.getDate()).padStart(2, "0");
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const ano = data.getFullYear();
+  return `${dia}/${mes}/${ano} ${hora || ""}`.trim();
+}
+
+// Função para montar a mensagem do alerta em linha única
+function montarMensagemAlerta(alerta) {
+  const inicio = formatarDataAlerta(alerta.data_inicio, alerta.hora_inicio);
+  const fim = formatarDataAlerta(alerta.data_fim, alerta.hora_fim);
+  return `<span class="weather-alert" style="background:${alerta.aviso_cor || alerta.cor || "#FFFE00"};color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
+    ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(alerta.severidade || alerta.perigo)}</b>
+    (${inicio} até ${fim}) - 
+    ${alerta.riscos && alerta.riscos.length ? `Riscos: ${alerta.riscos.join(" ")}` : ""}
+    ${alerta.instrucoes && alerta.instrucoes.length ? ` Instruções: ${alerta.instrucoes.join(" ")}` : ""}
+  </span>`;
 }
 
 async function loadWeatherData() {
   const urlPrev = `https://apiprevmet3.inmet.gov.br/previsao/${codigoIBGE}`;
-  const urlAvisos = `https://apiprevmet3.inmet.gov.br/avisos/${codigoIBGE}`;
   const urlAgora = `https://apiprevmet3.inmet.gov.br/estacao/proxima/${codigoIBGE}`;
   let tickerHtml = "";
 
+  let alertaHtml = "";
   try {
-    // ALERTAS/AVISOS (cache 30min)
-    let alerts;
+    // ALERTAS/AVISOS (detalhados)
+    let alertasDetalhados = [];
     try {
-      alerts = getCachedData("inmet_alertas", 30);
-      if (!alerts) {
-        alerts = await fetchJsonOrText(urlAvisos);
-        setCachedData("inmet_alertas", alerts);
-      }
-      if (
-        alerts &&
-        alerts[codigoIBGE] &&
-        Array.isArray(alerts[codigoIBGE]) &&
-        alerts[codigoIBGE].length > 0
-      ) {
-        alerts[codigoIBGE].forEach((alerta) => {
-          tickerHtml += `<span class="weather-alert">
-    ⚠️ ${safe(alerta.tipo)} - ${safe(alerta.titulo)}: ${safe(alerta.texto)}
-    </span>`;
-        });
+      alertasDetalhados = await getAlertasDetalhados();
+      if (alertasDetalhados.length > 0) {
+        // Apenas o primeiro alerta exibido (pode adaptar para múltiplos)
+        alertaHtml = montarMensagemAlerta(alertasDetalhados[0]);
+        tickerHtml += alertaHtml;
       }
     } catch (e) {
       console.warn("Avisos não disponíveis:", e.message);
@@ -284,6 +338,11 @@ async function loadWeatherData() {
       }
     });
 
+    // Adiciona novamente o alerta no meio do ticker
+    if (alertaHtml) {
+      tickerHtml += alertaHtml;
+    }
+
     // Próximos 3 dias
     for (let i = 1; i < 4 && i < diasKeys.length; i++) {
       const dia = br[diasKeys[i]];
@@ -316,11 +375,11 @@ async function loadWeatherData() {
         "°C"
       )}</span>
                     <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Max">Umd. Máx.: <span>${safe(
-        previsao.umidade_max, // Corrigido: sempre buscar do objeto 'dia'
+        previsao.umidade_max,
         "%"
       )}</span>
                     <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Min">Umd. Mín.: <span>${safe(
-        previsao.umidade_min, // Corrigido: sempre buscar do objeto 'dia'
+        previsao.umidade_min,
         "%"
       )}</span>
                     <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(
