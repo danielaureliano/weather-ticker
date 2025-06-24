@@ -157,10 +157,7 @@ function getCachedData(key, minutos = 30) {
  */
 function setCachedData(key, data) {
   try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ data, timestamp: Date.now() })
-    );
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {}
 }
 
@@ -204,11 +201,23 @@ function formatarDataAlerta(dataISO, hora) {
 function montarMensagemAlerta(alerta) {
   const inicio = formatarDataAlerta(alerta.data_inicio, alerta.hora_inicio);
   const fim = formatarDataAlerta(alerta.data_fim, alerta.hora_fim);
-  return `<span class="weather-alert" style="background:${alerta.aviso_cor || alerta.cor || "#FFFE00"};color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
-    ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(alerta.severidade || alerta.perigo)}</b>
+  return `<span class="weather-alert" style="background:${
+    alerta.aviso_cor || alerta.cor || "#FFFE00"
+  };color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
+    ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(
+    alerta.severidade || alerta.perigo
+  )}</b>
     (${inicio} até ${fim}) - 
-    ${alerta.riscos && alerta.riscos.length ? `Riscos: ${alerta.riscos.join(" ")}` : ""}
-    ${alerta.instrucoes && alerta.instrucoes.length ? ` Instruções: ${alerta.instrucoes.join(" ")}` : ""}
+    ${
+      alerta.riscos && alerta.riscos.length
+        ? `Riscos: ${alerta.riscos.join(" ")}`
+        : ""
+    }
+    ${
+      alerta.instrucoes && alerta.instrucoes.length
+        ? ` Instruções: ${alerta.instrucoes.join(" ")}`
+        : ""
+    }
   </span>`;
 }
 
