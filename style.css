@@ -19,11 +19,11 @@ body {
   color: #fff;
   font-size: 1em;
   height: auto;
-  min-height: unset;
+  min-height: 70px;
   align-items: stretch;
+  align-content: space-around;
   overflow: hidden;
-  border-radius: 0 0 6px 6px;
-  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.09);
+  border-radius: 0 0 12px 12px;  
 }
 
 #weather-title {
