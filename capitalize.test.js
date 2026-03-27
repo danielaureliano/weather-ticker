@@ -2,38 +2,26 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const { capitalize } = require('./script.js');
 
-test('capitalize utility function', async (t) => {
-  await t.test('should capitalize a lowercase string', () => {
-    assert.strictEqual(capitalize('hello'), 'Hello');
-  });
+test('função utilitária capitalize', async (t) => {
+  const casosDeTeste = [
+    { entrada: 'hello', esperado: 'Hello', descricao: 'deve capitalizar uma string em minúsculas' },
+    { entrada: 'Hello', esperado: 'Hello', descricao: 'deve manter strings já capitalizadas' },
+    { entrada: 'hELLO', esperado: 'Hello', descricao: 'deve converter o restante para minúsculas (hELLO)' },
+    { entrada: 'WORLD', esperado: 'World', descricao: 'deve converter o restante para minúsculas (WORLD)' },
+    { entrada: 'jAvAsCrIpT', esperado: 'Javascript', descricao: 'deve lidar com strings de caixa mista' },
+    { entrada: 'a', esperado: 'A', descricao: 'deve lidar com strings de um único caractere (a)' },
+    { entrada: 'Z', esperado: 'Z', descricao: 'deve lidar com strings de um único caractere (Z)' },
+    { entrada: '', esperado: '', descricao: 'deve retornar vazio para string vazia' },
+    { entrada: null, esperado: '', descricao: 'deve lidar com entrada nula' },
+    { entrada: undefined, esperado: '', descricao: 'deve lidar com entrada indefinida' },
+    { entrada: 123, esperado: '', descricao: 'deve lidar com números' },
+    { entrada: {}, esperado: '', descricao: 'deve lidar com objetos' },
+    { entrada: [], esperado: '', descricao: 'deve lidar com arrays' }
+  ];
 
-  await t.test('should handle already capitalized strings', () => {
-    assert.strictEqual(capitalize('Hello'), 'Hello');
-  });
-
-  await t.test('should lowercase the rest of the string', () => {
-    assert.strictEqual(capitalize('hELLO'), 'Hello');
-    assert.strictEqual(capitalize('WORLD'), 'World');
-  });
-
-  await t.test('should handle mixed case strings', () => {
-    assert.strictEqual(capitalize('jAvAsCrIpT'), 'Javascript');
-  });
-
-  await t.test('should handle single character strings', () => {
-    assert.strictEqual(capitalize('a'), 'A');
-    assert.strictEqual(capitalize('Z'), 'Z');
-  });
-
-  await t.test('should return an empty string for an empty string input', () => {
-    assert.strictEqual(capitalize(''), '');
-  });
-
-  await t.test('should handle non-string inputs gracefully', () => {
-    assert.strictEqual(capitalize(null), '');
-    assert.strictEqual(capitalize(undefined), '');
-    assert.strictEqual(capitalize(123), '');
-    assert.strictEqual(capitalize({}), '');
-    assert.strictEqual(capitalize([]), '');
-  });
+  for (const { entrada, esperado, descricao } of casosDeTeste) {
+    await t.test(descricao, () => {
+      assert.strictEqual(capitalize(entrada), esperado);
+    });
+  }
 });
