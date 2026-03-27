@@ -12,12 +12,13 @@ O projeto foi transformado de uma estrutura plana para uma organização modular
 
 ## 🛠️ Tecnologias e Ferramentas
 
-- **Jest:** Substitui o `node:test` para fornecer um ambiente de teste mais rico, com suporte a `describe`, `test`, e `expect`.
-- **NPM Scripts:** Padronização do comando `npm test` para automação.
+- **Jest:** Substitui o `node:test` para fornecer um ambiente de teste mais rico, com suporte a `describe`, `test`, e `expect`. Configurado para gerar relatórios `lcov` em `coverage/`.
+- **SonarCloud:** Ferramenta de análise estática configurada via `sonar-project.properties`.
+- **GitHub Actions:** Pipeline `.github/workflows/ci.yml` automatiza o scan do SonarCloud em cada PR.
 
 ## 🧪 Estratégia de Testes
-
 - **Testes Unitários:** Foco em funções utilitárias puras (ex: `capitalize`, `safe`, `getLunarDay`).
+- **Cobertura de Código:** Meta mínima de 80% de cobertura para aprovação no Quality Gate.
 - **Mocking:** Futura implementação de mocks para as APIs do INMET no `localStorage` para testar a lógica de cache sem dependência de rede.
 
 ## 🛡️ Segurança e Qualidade
