@@ -95,21 +95,6 @@ function getFaseLua(forecastDate) {
     name: phaseName,
   };
 }
-// pegue a data atual do navegador e mostre no console o resultado do cálculo da fase da lua para a data atual mais os próximos 4 dias
-const currentDate = new Date();
-const faseLuaAtual = getFaseLua(currentDate);
-console.log("Fase da Lua Atual:", faseLuaAtual);
-
-for (let i = 1; i <= 4; i++) {
-  const nextDate = new Date(currentDate);
-  nextDate.setDate(currentDate.getDate() + i);
-  const faseLuaProxima = getFaseLua(nextDate);
-  console.log(
-    `Fase da Lua em ${nextDate.toLocaleDateString()}:`,
-    faseLuaProxima
-  );
-}
-
 function capitalize(str) {
   return str && typeof str === "string"
     ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
