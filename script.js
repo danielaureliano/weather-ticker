@@ -95,26 +95,29 @@ function getFaseLua(forecastDate) {
     name: phaseName,
   };
 }
+// pegue a data atual do navegador e mostre no console o resultado do cálculo da fase da lua para a data atual mais os próximos 4 dias
+const currentDate = new Date();
+const faseLuaAtual = getFaseLua(currentDate);
+console.log("Fase da Lua Atual:", faseLuaAtual);
+
+for (let i = 1; i <= 4; i++) {
+  const nextDate = new Date(currentDate);
+  nextDate.setDate(currentDate.getDate() + i);
+  const faseLuaProxima = getFaseLua(nextDate);
+  console.log(
+    `Fase da Lua em ${nextDate.toLocaleDateString()}:`,
+    faseLuaProxima
+  );
+}
+
 function capitalize(str) {
   return str && typeof str === "string"
     ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
     : "";
 }
 
-function escapeHTML(str) {
-  if (!str || typeof str !== "string") return str;
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 function safe(val, unit = "") {
-  return val !== undefined && val !== null && val !== ""
-    ? escapeHTML(String(val)) + unit
-    : "--";
+  return val !== undefined && val !== null && val !== "" ? val + unit : "--";
 }
 
 async function fetchJsonOrText(url) {
@@ -134,7 +137,6 @@ async function fetchJsonOrText(url) {
  */
 function getCachedData(key, minutos = 30) {
   try {
-    if (typeof localStorage === "undefined") return null;
     const item = localStorage.getItem(key);
     if (!item) return null;
     const { data, timestamp } = JSON.parse(item);
@@ -155,7 +157,6 @@ function getCachedData(key, minutos = 30) {
  */
 function setCachedData(key, data) {
   try {
-    if (typeof localStorage === "undefined") return;
     localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {}
 }
@@ -201,7 +202,7 @@ function montarMensagemAlerta(alerta) {
   const inicio = formatarDataAlerta(alerta.data_inicio, alerta.hora_inicio);
   const fim = formatarDataAlerta(alerta.data_fim, alerta.hora_fim);
   return `<span class="weather-alert" style="background:${
-    escapeHTML(String(alerta.aviso_cor || alerta.cor || "#FFFE00"))
+    alerta.aviso_cor || alerta.cor || "#FFFE00"
   };color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
     ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(
     alerta.severidade || alerta.perigo
@@ -209,12 +210,12 @@ function montarMensagemAlerta(alerta) {
     (${inicio} até ${fim}) - 
     ${
       alerta.riscos && alerta.riscos.length
-        ? `Riscos: ${escapeHTML(alerta.riscos.join(" "))}`
+        ? `Riscos: ${alerta.riscos.join(" ")}`
         : ""
     }
     ${
       alerta.instrucoes && alerta.instrucoes.length
-        ? ` Instruções: ${escapeHTML(alerta.instrucoes.join(" "))}`
+        ? ` Instruções: ${alerta.instrucoes.join(" ")}`
         : ""
     }
   </span>`;
@@ -232,10 +233,8 @@ async function loadWeatherData() {
     try {
       alertasDetalhados = await getAlertasDetalhados();
       if (alertasDetalhados.length > 0) {
-        // Exibe todos os alertas ativos
-        alertaHtml = alertasDetalhados
-          .map((alerta) => montarMensagemAlerta(alerta))
-          .join("");
+        // Apenas o primeiro alerta exibido (pode adaptar para múltiplos)
+        alertaHtml = montarMensagemAlerta(alertasDetalhados[0]);
         tickerHtml += alertaHtml;
       }
     } catch (e) {
@@ -406,63 +405,60 @@ async function loadWeatherData() {
     }
   } catch (e) {
     tickerHtml =
-      "Erro ao carregar informações meteorológicas. " +
-      escapeHTML(String(e.message || e));
+      "Erro ao carregar informações meteorológicas. " + (e.message || e);
     console.error(e);
   }
 
-  if (typeof document !== "undefined") {
-    const tickerContent = document.getElementById("weather-ticker-content");
-    if (tickerContent) {
-      tickerContent.innerHTML = tickerHtml;
+  document.getElementById("weather-ticker-content").innerHTML = tickerHtml;
 
-      const ticker = document.getElementById("weather-ticker-content");
-      ticker.style.animation = "none";
-      ticker.style.minWidth = "unset";
-      setTimeout(() => {
-        const tickerWidth = ticker.scrollWidth;
-        const parentWidth = ticker.parentElement.offsetWidth;
-        const speedPxPerSec = 140; // Velocidade fixa de 140px/s
-        const duration = (tickerWidth + parentWidth) / speedPxPerSec;
-        const keyframesName = "ticker-weather-dyn";
-        const styleElem =
-          document.getElementById("ticker-style-dyn") ||
-          (() => {
-            const style = document.createElement("style");
-            style.id = "ticker-style-dyn";
-            document.head.appendChild(style);
-            return style;
-          })();
-        styleElem.innerHTML = `@keyframes ${keyframesName} { 0% { transform: translateX(${parentWidth}px); } 100% { transform: translateX(-${tickerWidth}px); } }`;
-        ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
-      }, 30);
-    }
+  const ticker = document.getElementById("weather-ticker-content");
+  ticker.style.animation = "none";
+  ticker.style.minWidth = "unset";
+  setTimeout(() => {
+    const tickerWidth = ticker.scrollWidth;
+    const parentWidth = ticker.parentElement.offsetWidth;
+    const speedPxPerSec = 140; // Velocidade fixa de 140px/s
+    const duration = (tickerWidth + parentWidth) / speedPxPerSec;
+    const keyframesName = "ticker-weather-dyn";
+    const styleElem =
+      document.getElementById("ticker-style-dyn") ||
+      (() => {
+        const style = document.createElement("style");
+        style.id = "ticker-style-dyn";
+        document.head.appendChild(style);
+        return style;
+      })();
+    styleElem.innerHTML = `@keyframes ${keyframesName} { 0% { transform: translateX(${parentWidth}px); } 100% { transform: translateX(-${tickerWidth}px); } }`;
+    ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
+  }, 30);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadWeatherData(); // Carrega os dados na primeira vez
+
+  // Lógica para pausar a animação com o mouse
+  const tickerBar = document.getElementById("weather-ticker-bar");
+  const tickerContent = document.getElementById("weather-ticker-content");
+
+  if (tickerBar && tickerContent) {
+    tickerBar.addEventListener("mouseenter", () => {
+      tickerContent.style.animationPlayState = "paused";
+    });
+
+    tickerBar.addEventListener("mouseleave", () => {
+      tickerContent.style.animationPlayState = "running";
+    });
+
+    // Lógica para pausar a animação com o foco (acessibilidade)
+    tickerBar.addEventListener("focus", () => {
+      tickerContent.style.animationPlayState = "paused";
+    });
+
+    tickerBar.addEventListener("blur", () => {
+      tickerContent.style.animationPlayState = "running";
+    });
   }
-}
+});
 
-if (typeof document !== "undefined") {
-  document.addEventListener("DOMContentLoaded", () => {
-    loadWeatherData(); // Carrega os dados na primeira vez
-
-    // Lógica para pausar a animação com o mouse
-    const tickerBar = document.getElementById("weather-ticker-bar");
-    const tickerContent = document.getElementById("weather-ticker-content");
-
-    if (tickerBar && tickerContent) {
-      tickerBar.addEventListener("mouseenter", () => {
-        tickerContent.style.animationPlayState = "paused";
-      });
-
-      tickerBar.addEventListener("mouseleave", () => {
-        tickerContent.style.animationPlayState = "running";
-      });
-    }
-  });
-
-  // Atualiza os dados a cada 30 minutos
-  setInterval(loadWeatherData, 30 * 60 * 1000);
-}
-
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { capitalize };
-}
+// Atualiza os dados a cada 30 minutos
+setInterval(loadWeatherData, 30 * 60 * 1000);
