@@ -162,28 +162,28 @@ function setCachedData(key, data) {
 
 // Função para buscar e montar os alertas detalhados
 async function getAlertasDetalhados() {
-  const urlAvisos = `https://apiprevmet3.inmet.gov.br/avisos/getByGeocode/${codigoIBGE}`;
-  let alertas = getCachedData("inmet_alertas", 30);
-  if (!alertas) {
-    alertas = await fetchJsonOrText(urlAvisos);
-    setCachedData("inmet_alertas", alertas);
-  }
-  // Se não houver alertas ativos, retorna array vazio
-  if (!Array.isArray(alertas) || alertas.length === 0) return [];
+  const urlAvisosAtivos = `https://apiprevmet3.inmet.gov.br/avisos/ativos`;
 
-  // Para cada alerta, busca detalhes pelo id
-  const detalhes = await Promise.all(
-    alertas.map(async (alerta) => {
-      const urlDetalhe = `https://apiprevmet3.inmet.gov.br/aviso/getByID/${alerta.id}`;
-      let detalhe = getCachedData(`inmet_alerta_${alerta.id}`, 30);
-      if (!detalhe) {
-        detalhe = await fetchJsonOrText(urlDetalhe);
-        setCachedData(`inmet_alerta_${alerta.id}`, detalhe);
-      }
-      return { ...alerta, ...detalhe };
-    })
+  // Usamos um cache de 30 minutos para todos os alertas ativos do país
+  let ativosObj = getCachedData("inmet_alertas_ativos", 30);
+  if (!ativosObj) {
+    ativosObj = await fetchJsonOrText(urlAvisosAtivos);
+    setCachedData("inmet_alertas_ativos", ativosObj);
+  }
+
+  // A API retorna os alertas divididos em "hoje" e "futuro"
+  let todosAtivos = [];
+  if (ativosObj && typeof ativosObj === 'object') {
+    if (Array.isArray(ativosObj.hoje)) todosAtivos = todosAtivos.concat(ativosObj.hoje);
+    if (Array.isArray(ativosObj.futuro)) todosAtivos = todosAtivos.concat(ativosObj.futuro);
+  }
+
+  // Filtra apenas os alertas que contêm o codigoIBGE desejado
+  const alertasParaGeocode = todosAtivos.filter(alerta =>
+    alerta.geocodes && String(alerta.geocodes).includes(String(codigoIBGE))
   );
-  return detalhes;
+
+  return alertasParaGeocode;
 }
 
 // Função para formatar datas do alerta
