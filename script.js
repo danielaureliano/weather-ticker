@@ -143,7 +143,8 @@ function getCachedData(key, minutos = 30) {
       return null;
     }
     return data;
-  } catch {
+  } catch (e) {
+    console.warn("Erro ao ler do localStorage:", e);
     return null;
   }
 }
@@ -157,7 +158,9 @@ function setCachedData(key, data) {
   try {
     if (typeof localStorage === "undefined") return;
     localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-  } catch {}
+  } catch (e) {
+    console.warn("Erro ao salvar no localStorage:", e);
+  }
 }
 
 // Função para buscar e montar os alertas detalhados
