@@ -275,11 +275,13 @@ async function loadWeatherData() {
     }
 
     const br = data && data[codigoIBGE] ? data[codigoIBGE] : {};
-    const diasKeys = Object.keys(br).sort((a, b) => {
-      const [da, ma, ya] = a.split("/").map(Number);
-      const [db, mb, yb] = b.split("/").map(Number);
-      return ya - yb || ma - mb || da - db;
-    });
+    const diasKeys = Object.keys(br)
+      .map(key => {
+        const parts = key.split("/");
+        return { key, d: Number(parts[0]), m: Number(parts[1]), y: Number(parts[2]) };
+      })
+      .sort((a, b) => a.y - b.y || a.m - b.m || a.d - b.d)
+      .map(item => item.key);
     if (!diasKeys.length)
       throw new Error("Sem dados de previsão para Brasília");
 
