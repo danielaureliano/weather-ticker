@@ -424,7 +424,7 @@ async function loadWeatherData() {
       setTimeout(() => {
         const tickerWidth = ticker.scrollWidth;
         const parentWidth = ticker.parentElement.offsetWidth;
-        const speedPxPerSec = 140; // Velocidade fixa de 140px/s
+        const speedPxPerSec = parseInt(ticker.dataset.speed, 10) || 140; // Velocidade dinâmica ou 140px/s por padrão
         const duration = (tickerWidth + parentWidth) / speedPxPerSec;
         const keyframesName = "ticker-weather-dyn";
         const styleElem =
