@@ -233,8 +233,10 @@ async function loadWeatherData() {
     try {
       alertasDetalhados = await getAlertasDetalhados();
       if (alertasDetalhados.length > 0) {
-        // Apenas o primeiro alerta exibido (pode adaptar para múltiplos)
-        alertaHtml = montarMensagemAlerta(alertasDetalhados[0]);
+        // Exibe todos os alertas ativos
+        alertaHtml = alertasDetalhados
+          .map((alerta) => montarMensagemAlerta(alerta))
+          .join("");
         tickerHtml += alertaHtml;
       }
     } catch (e) {
