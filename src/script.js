@@ -59,11 +59,11 @@ const phaseToIconMap = {
  */
 function getLunarDay(targetDate) {
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
-  // Garante que estamos comparando em UTC para consistência
+  // Garante que estamos usando componentes UTC para consistência
   const targetMs = Date.UTC(
-    targetDate.getFullYear(),
-    targetDate.getMonth(),
-    targetDate.getDate()
+    targetDate.getUTCFullYear(),
+    targetDate.getUTCMonth(),
+    targetDate.getUTCDate()
   );
 
   const diffMs = targetMs - KNOWN_NEW_MOON_MS;
@@ -85,7 +85,7 @@ function getFaseLua(forecastDate) {
   const lunarDay = getLunarDay(forecastDate);
 
   // O ciclo de ~29.5 dias é dividido em 8 fases de ~3.7 dias cada.
-  const phaseIndex = Math.floor(lunarDay / 3.6875 + 1); // +1 para alinhar com o índice 0-7
+  const phaseIndex = Math.floor(lunarDay / 3.6875);
   // Garante que o índice esteja dentro do intervalo 0-7
   const phaseName = phaseNames[phaseIndex % 8];
   const iconNumber = phaseToIconMap[phaseName] ?? 4;
@@ -176,14 +176,17 @@ async function getAlertasDetalhados() {
 
   // A API retorna os alertas divididos em "hoje" e "futuro"
   let todosAtivos = [];
-  if (ativosObj && typeof ativosObj === 'object') {
-    if (Array.isArray(ativosObj.hoje)) todosAtivos = todosAtivos.concat(ativosObj.hoje);
-    if (Array.isArray(ativosObj.futuro)) todosAtivos = todosAtivos.concat(ativosObj.futuro);
+  if (ativosObj && typeof ativosObj === "object") {
+    if (Array.isArray(ativosObj.hoje))
+      todosAtivos = todosAtivos.concat(ativosObj.hoje);
+    if (Array.isArray(ativosObj.futuro))
+      todosAtivos = todosAtivos.concat(ativosObj.futuro);
   }
 
   // Filtra apenas os alertas que contêm o codigoIBGE desejado
-  const alertasParaGeocode = todosAtivos.filter(alerta =>
-    alerta.geocodes && String(alerta.geocodes).includes(String(codigoIBGE))
+  const alertasParaGeocode = todosAtivos.filter(
+    (alerta) =>
+      alerta.geocodes && String(alerta.geocodes).includes(String(codigoIBGE))
   );
 
   return alertasParaGeocode;
@@ -203,12 +206,12 @@ function formatarDataAlerta(dataISO, hora) {
 function montarMensagemAlerta(alerta) {
   const inicio = formatarDataAlerta(alerta.data_inicio, alerta.hora_inicio);
   const fim = formatarDataAlerta(alerta.data_fim, alerta.hora_fim);
-  return `<span class="weather-alert" style="background:${
-    escapeHTML(String(alerta.aviso_cor || alerta.cor || "#FFFE00"))
-  };color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
+  return `<span class="weather-alert" style="background:${escapeHTML(
+    String(alerta.aviso_cor || alerta.cor || "#FFFE00")
+  )};color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
     ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(
-    alerta.severidade || alerta.perigo
-  )}</b>
+      alerta.severidade || alerta.perigo
+    )}</b>
     (${inicio} até ${fim}) - 
     ${
       alerta.riscos && alerta.riscos.length
@@ -265,9 +268,9 @@ async function loadWeatherData() {
                 Chuva: ${safe(dado.CHUVA, " mm")}
                 <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">
                 Vento: ${safe(dado.VEN_VEL, " m/s")} (${safe(
-      dado.VEN_RAJ,
-      " m/s"
-    )})
+                  dado.VEN_RAJ,
+                  " m/s"
+                )})
                 </span>`;
 
     // PREVISÃO DO TEMPO (hoje + próximos 3 dias) (cache 60min)
@@ -279,12 +282,17 @@ async function loadWeatherData() {
 
     const br = data && data[codigoIBGE] ? data[codigoIBGE] : {};
     const diasKeys = Object.keys(br)
-      .map(key => {
+      .map((key) => {
         const parts = key.split("/");
-        return { key, d: Number(parts[0]), m: Number(parts[1]), y: Number(parts[2]) };
+        return {
+          key,
+          d: Number(parts[0]),
+          m: Number(parts[1]),
+          y: Number(parts[2]),
+        };
       })
       .sort((a, b) => a.y - b.y || a.m - b.m || a.d - b.d)
-      .map(item => item.key);
+      .map((item) => item.key);
     if (!diasKeys.length)
       throw new Error("Sem dados de previsão para Brasília");
 
@@ -302,36 +310,36 @@ async function loadWeatherData() {
                 <span>${safe(
                   hoje.manha.resumo
                 )}</span> <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx.">Máxima: <span class="weather-max">${safe(
-      hoje.manha.temp_max,
-      "°C"
-    )}</span>
+                  hoje.manha.temp_max,
+                  "°C"
+                )}</span>
                 <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín.">Mínima: <span class="weather-min">${safe(
-      hoje.manha.temp_min,
-      "°C"
-    )}</span>
+                  hoje.manha.temp_min,
+                  "°C"
+                )}</span>
                 <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Máx.">Umd. Máx.: <span>${safe(
-      hoje.manha.umidade_max,
-      "%"
-    )}</span>
+                  hoje.manha.umidade_max,
+                  "%"
+                )}</span>
                 <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Mín.">Umd. Mín.: <span>${safe(
-      hoje.manha.umidade_min,
-      "%"
-    )}</span>
+                  hoje.manha.umidade_min,
+                  "%"
+                )}</span>
                 <img src="${ICON_NASCER}" class="weather-icon-small" alt="Nascer do Sol">
                     Nascer do Sol: ${safe(hoje.manha.nascer)}
                 <img src="${ICON_OCASO}" class="weather-icon-small" alt="Pôr do Sol">
                     Pôr do Sol: ${safe(hoje.manha.ocaso)}
                 <span class="weather-label">Estação:</span>
                     <img src="${iconEstacao}" class="weather-icon-estacao" alt="Estação" title="${safe(
-      hoje.manha.estacao
-    )}">
+                      hoje.manha.estacao
+                    )}">
                     <span>${safe(hoje.manha.estacao)}</span>
                 <span class="weather-label">Lua:</span>
                     <img src="${
                       faseLua.iconUrl
                     }" class="weather-icon-lua" alt="Lua" title="${safe(
-      faseLua.name
-    )}">
+                      faseLua.name
+                    )}">
                     <span>${safe(faseLua.name)}</span>
                 </span>`;
 
@@ -347,8 +355,8 @@ async function loadWeatherData() {
                             )}:</span>
                         ${safe(hoje[periodo].resumo)},
                             Vento: ${safe(hoje[periodo].int_vento)} (${safe(
-          hoje[periodo].dir_vento
-        )})
+                              hoje[periodo].dir_vento
+                            )})
                         </span>`;
       }
     });
@@ -363,8 +371,6 @@ async function loadWeatherData() {
     for (let i = 1; i < 4 && i < diasKeys.length; i++) {
       const dia = br[diasKeys[i]];
       const previsao = dia.manha || dia;
-      const umidadeMax = dia.umidade_max || previsao.umidade_max;
-      const umidadeMin = dia.umidade_min || previsao.umidade_min;
 
       // Calcula a fase da lua para cada dia da previsão
       const [d_loop, m_loop, y_loop] = diasKeys[i].split("/");
@@ -378,35 +384,35 @@ async function loadWeatherData() {
                     <img src="${
                       previsao.icone
                     }" class="weather-icon" alt="${safe(
-        previsao.dia_semana || dia.dia_semana
-      )}">
+                      previsao.dia_semana || dia.dia_semana
+                    )}">
                     <span>${safe(
                       previsao.resumo
                     )}</span> <img src="${ICON_TMAX}" class="weather-icon-tmax" alt="Temp. Máx">Máxima: <span class="weather-max">${safe(
-        previsao.temp_max,
-        "°C"
-      )}</span>
+                      previsao.temp_max,
+                      "°C"
+                    )}</span>
                     <img src="${ICON_TMIN}" class="weather-icon-tmin" alt="Temp. Mín">Mínima: <span class="weather-min">${safe(
-        previsao.temp_min,
-        "°C"
-      )}</span>
+                      previsao.temp_min,
+                      "°C"
+                    )}</span>
                     <img src="${ICON_UMAX}" class="weather-icon-umid" alt="Umidade Max">Umd. Máx.: <span>${safe(
-        previsao.umidade_max,
-        "%"
-      )}</span>
+                      previsao.umidade_max,
+                      "%"
+                    )}</span>
                     <img src="${ICON_UMIN}" class="weather-icon-umid" alt="Umidade Min">Umd. Mín.: <span>${safe(
-        previsao.umidade_min,
-        "%"
-      )}</span>
+                      previsao.umidade_min,
+                      "%"
+                    )}</span>
                     <img src="${ICON_WIND}" class="weather-icon-small" alt="Vento">Vento: ${safe(
-        previsao.int_vento
-      )} (${safe(previsao.dir_vento)}) 
+                      previsao.int_vento
+                    )} (${safe(previsao.dir_vento)}) 
                         <span class="weather-label">Lua:</span>
                         <img src="${
                           faseLuaDia.iconUrl
                         }" class="weather-icon-lua" alt="Lua" title="${safe(
-        faseLuaDia.name
-      )}">
+                          faseLuaDia.name
+                        )}">
                         <span>${safe(faseLuaDia.name)}</span>
                   </span>`);
     }
@@ -471,5 +477,5 @@ if (typeof document !== "undefined") {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { capitalize };
+  module.exports = { capitalize, getLunarDay, getFaseLua };
 }
