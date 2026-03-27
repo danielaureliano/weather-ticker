@@ -25,22 +25,17 @@ body {
 }
 
 #weather-title {
-  width: auto;
-  min-width: 180px;
-  background: #0c97f2;
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  font-size: 2.3rem;
-  font-weight: bold;
-  gap: 0.4em;
   width: auto;
   min-width: 130px;
   max-width: 10vw;
   background: #0c97f2;
   color: #fff;
-  justify-content: flex-start;
+  font-size: 2.3rem;
+  font-weight: bold;
+  gap: 0.4em;
   letter-spacing: 1.5px;
   padding-left: 0.5em;
   padding-right: 1.8em;
@@ -122,6 +117,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: 56px;
 }
 
 .weather-item > img,
@@ -130,10 +126,7 @@ body {
   min-width: 50px;
 }
 
-.weather-item {
-  align-items: center;
-  min-height: 56px;
-}
+
 
 .weather-icon,
 .weather-icon-umid,
