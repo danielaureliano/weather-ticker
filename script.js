@@ -116,8 +116,20 @@ function capitalize(str) {
     : "";
 }
 
+function escapeHTML(str) {
+  if (!str || typeof str !== "string") return str;
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function safe(val, unit = "") {
-  return val !== undefined && val !== null && val !== "" ? val + unit : "--";
+  return val !== undefined && val !== null && val !== ""
+    ? escapeHTML(String(val)) + unit
+    : "--";
 }
 
 async function fetchJsonOrText(url) {
@@ -202,7 +214,7 @@ function montarMensagemAlerta(alerta) {
   const inicio = formatarDataAlerta(alerta.data_inicio, alerta.hora_inicio);
   const fim = formatarDataAlerta(alerta.data_fim, alerta.hora_fim);
   return `<span class="weather-alert" style="background:${
-    alerta.aviso_cor || alerta.cor || "#FFFE00"
+    escapeHTML(String(alerta.aviso_cor || alerta.cor || "#FFFE00"))
   };color:#222;padding:0 0.5em;border-radius:4px;margin-right:0.5em;white-space:nowrap;">
     ⚠️ <b>${safe(alerta.tipo || alerta.descricao)}</b> - <b>${safe(
     alerta.severidade || alerta.perigo
@@ -210,12 +222,12 @@ function montarMensagemAlerta(alerta) {
     (${inicio} até ${fim}) - 
     ${
       alerta.riscos && alerta.riscos.length
-        ? `Riscos: ${alerta.riscos.join(" ")}`
+        ? `Riscos: ${escapeHTML(alerta.riscos.join(" "))}`
         : ""
     }
     ${
       alerta.instrucoes && alerta.instrucoes.length
-        ? ` Instruções: ${alerta.instrucoes.join(" ")}`
+        ? ` Instruções: ${escapeHTML(alerta.instrucoes.join(" "))}`
         : ""
     }
   </span>`;
@@ -405,7 +417,8 @@ async function loadWeatherData() {
     }
   } catch (e) {
     tickerHtml =
-      "Erro ao carregar informações meteorológicas. " + (e.message || e);
+      "Erro ao carregar informações meteorológicas. " +
+      escapeHTML(String(e.message || e));
     console.error(e);
   }
 
