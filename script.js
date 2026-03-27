@@ -359,6 +359,7 @@ async function loadWeatherData() {
     }
 
     // Próximos 3 dias
+    const proximosDiasHtml = [];
     for (let i = 1; i < 4 && i < diasKeys.length; i++) {
       const dia = br[diasKeys[i]];
       const previsao = dia.manha || dia;
@@ -370,7 +371,7 @@ async function loadWeatherData() {
       const forecastDate_loop = new Date(y_loop, m_loop - 1, d_loop);
       const faseLuaDia = getFaseLua(forecastDate_loop);
 
-      tickerHtml += `<span class="weather-item">
+      proximosDiasHtml.push(`<span class="weather-item">
                     <span class="weather-day">${safe(
                       previsao.dia_semana || dia.dia_semana
                     )}:</span>
@@ -407,8 +408,9 @@ async function loadWeatherData() {
         faseLuaDia.name
       )}">
                         <span>${safe(faseLuaDia.name)}</span>
-                  </span>`;
+                  </span>`);
     }
+    tickerHtml += proximosDiasHtml.join("");
   } catch (e) {
     tickerHtml =
       "Erro ao carregar informações meteorológicas. " +
