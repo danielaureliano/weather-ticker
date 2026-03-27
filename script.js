@@ -137,6 +137,7 @@ async function fetchJsonOrText(url) {
  */
 function getCachedData(key, minutos = 30) {
   try {
+    if (typeof localStorage === "undefined") return null;
     const item = localStorage.getItem(key);
     if (!item) return null;
     const { data, timestamp } = JSON.parse(item);
@@ -157,6 +158,7 @@ function getCachedData(key, minutos = 30) {
  */
 function setCachedData(key, data) {
   try {
+    if (typeof localStorage === "undefined") return;
     localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {}
 }
@@ -409,47 +411,58 @@ async function loadWeatherData() {
     console.error(e);
   }
 
-  document.getElementById("weather-ticker-content").innerHTML = tickerHtml;
+  if (typeof document !== "undefined") {
+    const tickerContent = document.getElementById("weather-ticker-content");
+    if (tickerContent) {
+      tickerContent.innerHTML = tickerHtml;
 
-  const ticker = document.getElementById("weather-ticker-content");
-  ticker.style.animation = "none";
-  ticker.style.minWidth = "unset";
-  setTimeout(() => {
-    const tickerWidth = ticker.scrollWidth;
-    const parentWidth = ticker.parentElement.offsetWidth;
-    const speedPxPerSec = 140; // Velocidade fixa de 140px/s
-    const duration = (tickerWidth + parentWidth) / speedPxPerSec;
-    const keyframesName = "ticker-weather-dyn";
-    const styleElem =
-      document.getElementById("ticker-style-dyn") ||
-      (() => {
-        const style = document.createElement("style");
-        style.id = "ticker-style-dyn";
-        document.head.appendChild(style);
-        return style;
-      })();
-    styleElem.innerHTML = `@keyframes ${keyframesName} { 0% { transform: translateX(${parentWidth}px); } 100% { transform: translateX(-${tickerWidth}px); } }`;
-    ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
-  }, 30);
+      const ticker = document.getElementById("weather-ticker-content");
+      ticker.style.animation = "none";
+      ticker.style.minWidth = "unset";
+      setTimeout(() => {
+        const tickerWidth = ticker.scrollWidth;
+        const parentWidth = ticker.parentElement.offsetWidth;
+        const speedPxPerSec = 140; // Velocidade fixa de 140px/s
+        const duration = (tickerWidth + parentWidth) / speedPxPerSec;
+        const keyframesName = "ticker-weather-dyn";
+        const styleElem =
+          document.getElementById("ticker-style-dyn") ||
+          (() => {
+            const style = document.createElement("style");
+            style.id = "ticker-style-dyn";
+            document.head.appendChild(style);
+            return style;
+          })();
+        styleElem.innerHTML = `@keyframes ${keyframesName} { 0% { transform: translateX(${parentWidth}px); } 100% { transform: translateX(-${tickerWidth}px); } }`;
+        ticker.style.animation = `${keyframesName} ${duration}s linear infinite`;
+      }, 30);
+    }
+  }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadWeatherData(); // Carrega os dados na primeira vez
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", () => {
+    loadWeatherData(); // Carrega os dados na primeira vez
 
-  // Lógica para pausar a animação com o mouse
-  const tickerBar = document.getElementById("weather-ticker-bar");
-  const tickerContent = document.getElementById("weather-ticker-content");
+    // Lógica para pausar a animação com o mouse
+    const tickerBar = document.getElementById("weather-ticker-bar");
+    const tickerContent = document.getElementById("weather-ticker-content");
 
-  if (tickerBar && tickerContent) {
-    tickerBar.addEventListener("mouseenter", () => {
-      tickerContent.style.animationPlayState = "paused";
-    });
+    if (tickerBar && tickerContent) {
+      tickerBar.addEventListener("mouseenter", () => {
+        tickerContent.style.animationPlayState = "paused";
+      });
 
-    tickerBar.addEventListener("mouseleave", () => {
-      tickerContent.style.animationPlayState = "running";
-    });
-  }
-});
+      tickerBar.addEventListener("mouseleave", () => {
+        tickerContent.style.animationPlayState = "running";
+      });
+    }
+  });
 
-// Atualiza os dados a cada 30 minutos
-setInterval(loadWeatherData, 30 * 60 * 1000);
+  // Atualiza os dados a cada 30 minutos
+  setInterval(loadWeatherData, 30 * 60 * 1000);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { capitalize };
+}

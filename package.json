@@ -1,0 +1,11 @@
+{
+  "name": "weather-ticker-inmet",
+  "version": "1.0.0",
+  "description": "Ticker Meteorologia INMET Brasília",
+  "main": "script.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "author": "Daniel Aureliano",
+  "license": "MIT"
+}
