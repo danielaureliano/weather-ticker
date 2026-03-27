@@ -448,6 +448,15 @@ document.addEventListener("DOMContentLoaded", () => {
     tickerBar.addEventListener("mouseleave", () => {
       tickerContent.style.animationPlayState = "running";
     });
+
+    // Lógica para pausar a animação com o foco (acessibilidade)
+    tickerBar.addEventListener("focus", () => {
+      tickerContent.style.animationPlayState = "paused";
+    });
+
+    tickerBar.addEventListener("blur", () => {
+      tickerContent.style.animationPlayState = "running";
+    });
   }
 });
 

@@ -213,3 +213,9 @@ body {
     height: 42px;
   }
 }
+
+/* Acessibilidade - Indicador de foco para navegação por teclado */
+#weather-ticker-bar:focus-visible {
+  outline: 3px solid #fffe00; /* Mesma cor usada para os alertas, chama bastante atenção no fundo azul */
+  outline-offset: -3px;
+}
