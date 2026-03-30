@@ -227,32 +227,54 @@ async function loadWeatherData() {
   const urlPrev = `https://apiprevmet3.inmet.gov.br/previsao/${codigoIBGE}`;
   const urlAgora = `https://apiprevmet3.inmet.gov.br/estacao/proxima/${codigoIBGE}`;
   let tickerHtml = "";
-
   let alertaHtml = "";
+
   try {
-    // ALERTAS/AVISOS (detalhados)
-    let alertasDetalhados = [];
-    try {
-      alertasDetalhados = await getAlertasDetalhados();
-      if (alertasDetalhados.length > 0) {
-        // Exibe todos os alertas ativos
-        alertaHtml = alertasDetalhados
-          .map((alerta) => montarMensagemAlerta(alerta))
-          .join("");
-        tickerHtml += alertaHtml;
-      }
-    } catch (e) {
-      console.warn("Avisos não disponíveis:", e.message);
+    // Dispara as requisições em paralelo para melhorar a performance inicial
+    const [alertasDetalhados, dadosObj, data] = await Promise.all([
+      // 1. ALERTAS/AVISOS
+      (async () => {
+        try {
+          return await getAlertasDetalhados();
+        } catch (e) {
+          console.warn("Avisos não disponíveis:", e.message);
+          return [];
+        }
+      })(),
+
+      // 2. TEMPO AGORA (cache 30min)
+      (async () => {
+        let obj = getCachedData("inmet_agora", 30);
+        if (!obj) {
+          obj = await fetchJsonOrText(urlAgora);
+          setCachedData("inmet_agora", obj);
+        }
+        return obj;
+      })(),
+
+      // 3. PREVISÃO DO TEMPO (cache 60min)
+      (async () => {
+        let prev = getCachedData("inmet_previsao", 60);
+        if (!prev) {
+          prev = await fetchJsonOrText(urlPrev);
+          setCachedData("inmet_previsao", prev);
+        }
+        return prev;
+      })()
+    ]);
+
+    // Montagem sequencial para preservar a interface
+
+    // Alertas
+    if (alertasDetalhados && alertasDetalhados.length > 0) {
+      alertaHtml = alertasDetalhados
+        .map((alerta) => montarMensagemAlerta(alerta))
+        .join("");
+      tickerHtml += alertaHtml;
     }
 
-    // TEMPO AGORA (cache 30min)
-    let dadosObj = getCachedData("inmet_agora", 30);
-    if (!dadosObj) {
-      dadosObj = await fetchJsonOrText(urlAgora);
-      setCachedData("inmet_agora", dadosObj);
-    }
-    let dado = dadosObj.dados || {};
-
+    // Tempo Agora
+    let dado = (dadosObj && dadosObj.dados) ? dadosObj.dados : {};
     tickerHtml += `<span class="weather-item">
                 <img src="${ICON_TEMP}" class="weather-icon-tmax" alt="Temperatura atual">
                 <span class="weather-label">Agora:</span>
@@ -270,13 +292,7 @@ async function loadWeatherData() {
     )})
                 </span>`;
 
-    // PREVISÃO DO TEMPO (hoje + próximos 3 dias) (cache 60min)
-    let data = getCachedData("inmet_previsao", 60);
-    if (!data) {
-      data = await fetchJsonOrText(urlPrev);
-      setCachedData("inmet_previsao", data);
-    }
-
+    // Previsão do Tempo
     const br = data && data[codigoIBGE] ? data[codigoIBGE] : {};
     const diasKeys = Object.keys(br)
       .map(key => {
